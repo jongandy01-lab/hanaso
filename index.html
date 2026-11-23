@@ -422,6 +422,8 @@ const THINK=`Help the learner THINK in Japanese: prefer explaining Japanese with
 const KROWS=[['a','あいうえお','a i u e o'],['k','かきくけこ','ka ki ku ke ko'],['s','さしすせそ','sa shi su se so'],['t','たちつてと','ta chi tsu te to'],['n','なにぬねの','na ni nu ne no'],['h','はひふへほ','ha hi fu he ho'],['m','まみむめも','ma mi mu me mo'],['y','や・ゆ・よ','ya - yu - yo'],['r','らりるれろ','ra ri ru re ro'],['w','わ・・・を','wa - - - wo'],['nn','ん','n'],['g','がぎぐげご','ga gi gu ge go'],['z','ざじずぜぞ','za ji zu ze zo'],['d','だぢづでど','da ji zu de do'],['b','ばびぶべぼ','ba bi bu be bo'],['p','ぱぴぷぺぽ','pa pi pu pe po']];
 const ROWS=KROWS.map(([id,c,r])=>{const cs=[...c],rs=r.split(' ');return{id,cells:cs.map((ch,i)=>ch==='・'?null:{h:ch,r:rs[i]})}});
 const ALLK=ROWS.flatMap(r=>r.cells.filter(Boolean).map(c=>({...c,row:r.id})));
+const SINGLE=['a','nn'];
+const distract=(r,n=3)=>{const c=shuffle([...new Set(ALLK.map(x=>x.r))].filter(x=>x!==r));const same=c.filter(x=>x.length===r.length),near=c.filter(x=>x.length!==r.length).sort((a,b)=>Math.abs(a.length-r.length)-Math.abs(b.length-r.length));return[...same,...near].slice(0,n)};
 const ROWLAB=id=>ROWS.find(r=>r.id===id).cells.find(Boolean).h;
 const WORDS_H=[['ねこ','neko','cat'],['いぬ','inu','dog'],['あか','aka','red'],['あお','ao','blue'],['いえ','ie','house'],['かお','kao','face'],['すし','sushi','sushi'],['ここ','koko','here'],['たかい','takai','expensive'],['やすい','yasui','cheap'],['みず','mizu','water'],['おかね','okane','money'],['なまえ','namae','name'],['はな','hana','flower'],['ひと','hito','person'],['くるま','kuruma','car'],['あさ','asa','morning'],['よる','yoru','night'],['みせ','mise','shop'],['かいもの','kaimono','shopping'],['ありがとう','arigatou','thank you'],['すみません','sumimasen','excuse me'],['こんにちは','konnichiwa','hello'],['ください','kudasai','please give me'],['いくら','ikura','how much'],['えき','eki','station'],['たべる','taberu','to eat'],['のむ','nomu','to drink']];
 const WORDS_K=[['コーヒー','koohii','coffee'],['パン','pan','bread'],['テレビ','terebi','TV'],['カメラ','kamera','camera'],['タクシー','takushii','taxi'],['ホテル','hoteru','hotel'],['レストラン','resutoran','restaurant'],['ジュース','juusu','juice'],['ケーキ','keeki','cake'],['アイス','aisu','ice cream'],['メニュー','menyuu','menu'],['レジ','reji','register'],['サイズ','saizu','size'],['シャツ','shatsu','shirt'],['バス','basu','bus'],['トイレ','toire','restroom'],['ビール','biiru','beer'],['パソコン','pasokon','computer'],['カード','kaado','card'],['アニメ','anime','anime'],['ニュース','nyuusu','news'],['ドラマ','dorama','drama']];
@@ -429,7 +431,7 @@ const WORDS_K=[['コーヒー','koohii','coffee'],['パン','pan','bread'],['テ
 /* ================= state & storage ================= */
 const LSP='hanaso2:';
 const freshSet=()=>({tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
-const fresh=()=>({v:2,updated:0,xp:0,done:{},unitPass:{},levelPass:{},attempts:{},topic:'unit',hist:{},kana:{},kanaOK:{h:0,k:0},kanaRows:['a','k'],script:'h',stats:{msgs:0,jp:0},days:[],buckets:['talk'],open:'n5',bibleLesson:0,set:freshSet()});
+const fresh=()=>({v:2,updated:0,xp:0,done:{},unitPass:{},levelPass:{},attempts:{},topic:'unit',hist:{},kana:{},kanaOK:{h:0,k:0},kanaRows:['a'],script:'h',stats:{msgs:0,jp:0},days:[],buckets:['talk'],open:'n5',bibleLesson:0,set:freshSet()});
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(LSP+k)||'null')}catch(e){return null}};
 function lsSet(k,v){const s=JSON.stringify(v);try{localStorage.setItem(LSP+k,s)}catch(e){try{const cur=curUnit().id;Object.keys(localStorage).filter(x=>x.startsWith(LSP+'lesson-')&&!x.includes(cur)).forEach(x=>localStorage.removeItem(x));localStorage.setItem(LSP+k,s)}catch(e2){}}}
 let S=fresh(),ITEMS={},ITEMSU={},LESS={};
@@ -667,7 +669,7 @@ function openStep(u,s){
  if(s.type==='talk'){S.topic='unit';save();go('talk');return}
  LZ={u,s,phase:'loading',i:0};go('lesson');
  if(s.type==='ktest'){const pool=shuffle(ALLK.filter(k=>k.h!=='ぢ'&&k.h!=='づ')).slice(0,20);
-  const qs=pool.map(k=>{const ch=u.kana==='k'?toKata(k.h):k.h;const others=shuffle([...new Set(ALLK.map(x=>x.r).filter(r=>r!==k.r))]).slice(0,3);const c=shuffle([k.r,...others]);return{kind:'mc',promptHTML:`<span class="kbig">${ch}</span>`,choices:c,answer:c.indexOf(k.r),sayAfter:ch,plainChoices:true}});
+  const qs=pool.map(k=>{const ch=u.kana==='k'?toKata(k.h):k.h;const others=distract(k.r);const c=shuffle([k.r,...others]);return{kind:'mc',promptHTML:`<span class="kbig">${ch}</span>`,choices:c,answer:c.indexOf(k.r),sayAfter:ch,plainChoices:true}});
   LZ.phase='quiz';startQuiz(qs,{pass:17,onDone:(r,t)=>finishTest(r,t)});return}
  loadStep()}
 async function loadStep(regen){const {u,s}=LZ;LZ.phase='loading';LZ.err=null;renderLesson();
@@ -1034,9 +1036,9 @@ $('#review').addEventListener('click',async e=>{if(REVTAB!=='book')return;const 
 const kch=c=>S.script==='k'?toKata(c):c;
 const kstat=c=>S.kana[c]||{c:0,w:0};
 const mastery=c=>{const s=kstat(c);return s.c>=3&&s.c>=s.w*2?2:s.c>0?1:0};
-const pool=()=>ALLK.filter(k=>S.kanaRows.includes(k.row));
+const pool=()=>{let r=S.kanaRows;if(r.some(x=>SINGLE.includes(x))&&r.some(x=>!SINGLE.includes(x)))r=S.kanaRows=r.filter(x=>!SINGLE.includes(x));return ALLK.filter(k=>r.includes(k.row))};
 function pickK(){const p=pool();const sc=k=>{const s=kstat(kch(k.h));return s.c-s.w*2+Math.random()*3};return p.sort((a,b)=>sc(a)-sc(b))[0]}
-function rowsHTML(){return `<div class="gh">Practice these rows</div><div class="rows">${ROWS.map(r=>`<button class="rw ${S.kanaRows.includes(r.id)?'on':''}" data-row="${r.id}">${kch(ROWLAB(r.id))}</button>`).join('')}<button class="rw" data-row="all" style="font-family:inherit">All</button></div>`}
+function rowsHTML(){return `<div class="gh">Practice these rows</div><div class="rows">${ROWS.map(r=>`<button class="rw ${S.kanaRows.includes(r.id)?'on':''}" data-row="${r.id}">${kch(ROWLAB(r.id))}</button>`).join('')}<button class="rw" data-row="all" style="font-family:inherit">All</button></div><p class="foot" style="margin:-8px 0 12px">The single-letter sounds (${kch('あ')} row and ${kch('ん')}) are practiced on their own, apart from the other rows.</p>`}
 function renderKana(){const body=$('#rbody');if(!body)return;
  let h=`<div class="seg" id="script"><button data-s="h" class="${S.script==='h'?'on':''}">ひらがな</button><button data-s="k" class="${S.script==='k'?'on':''}">カタカナ</button></div><div class="seg" id="kmode">${['chart','read','write','trace'].map(m=>`<button data-m="${m}" class="${kmode===m?'on':''}">${m[0].toUpperCase()+m.slice(1)}</button>`).join('')}</div>`;
  if(kmode==='chart'){const sec=(ids,label)=>`<div class="gh">${label}</div><div class="grid">${ROWS.filter(r=>ids.includes(r.id)).flatMap(r=>{const cells=r.cells.map(c=>c?`<button class="kc m${mastery(kch(c.h))}" data-k="${c.h}"><b>${kch(c.h)}</b><small>${c.r}</small></button>`:'<div class="kc blank"></div>');while(cells.length<5)cells.push('<div class="kc blank"></div>');return cells}).join('')}</div>`;
@@ -1047,7 +1049,7 @@ function renderKana(){const body=$('#rbody');if(!body)return;
  if(kmode==='read')body.innerHTML=h+rowsHTML()+`<div class="card">${st}<div class="big">${q.ch}</div><div class="opts">${q.opts.map(o=>`<button class="op" data-o="${o}" style="text-align:center">${o}</button>`).join('')}</div><div class="fb" id="kfb" style="text-align:center"></div></div>`;
  else body.innerHTML=h+rowsHTML()+`<div class="card" style="text-align:center">${st}<div class="sub" style="margin:8px 0 0">Type this in ${S.script==='k'?'katakana':'hiragana'}</div><div class="prompt">${esc(q.rom)}</div><div class="sub">${q.en?esc(q.en):'&nbsp;'}</div><input class="ans" id="kans" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="${S.script==='k'?'カタカナ':'ひらがな'}"><div class="fb" id="kfb"></div><div class="tbar"><button class="btn alt" id="kskip">Show me</button><button class="btn" id="kchk">Check</button></div></div>`}
 function newQuiz(prev){const streak=prev?prev.streak:0;
- if(kmode==='read'){const k=pickK(),ch=kch(k.h);const others=shuffle([...new Set(ALLK.map(x=>x.r).filter(r=>r!==k.r))]).slice(0,3);return{ch,ans:k.r,opts:shuffle([k.r,...others]),streak}}
+ if(kmode==='read'){const k=pickK(),ch=kch(k.h);const others=distract(k.r);return{ch,ans:k.r,opts:shuffle([k.r,...others]),streak}}
  const set=new Set(pool().map(k=>kch(k.h))),full=new Set(ALLK.map(k=>kch(k.h)));
  const words=(S.script==='k'?WORDS_K:WORDS_H).filter(([w])=>[...w].every(c=>!full.has(c)||set.has(c)));
  if(words.length&&Math.random()<.45){const [w,r,en]=words[Math.floor(Math.random()*words.length)];return{ans:w,rom:r,en,streak}}
@@ -1057,7 +1059,7 @@ function markK(chars,ok){for(const c of chars){if(!/[ぁ-ヶ]/.test(c))continue;
 $('#review').addEventListener('click',e=>{if(REVTAB!=='kana')return;
  const sb=e.target.closest('#script button');if(sb){S.script=sb.dataset.s;save();quiz=null;return renderKana()}
  const mb=e.target.closest('#kmode button');if(mb){kmode=mb.dataset.m;quiz=null;return renderKana()}
- const row=e.target.closest('[data-row]');if(row){const id=row.dataset.row;S.kanaRows=id==='all'?(S.kanaRows.length===ROWS.length?['a']:ROWS.map(r=>r.id)):S.kanaRows.includes(id)?S.kanaRows.filter(x=>x!==id):[...S.kanaRows,id];save();quiz=null;return renderKana()}
+ const row=e.target.closest('[data-row]');if(row){const id=row.dataset.row;const multi=ROWS.map(r=>r.id).filter(x=>!SINGLE.includes(x));S.kanaRows=id==='all'?(S.kanaRows.length===multi.length&&S.kanaRows.every(x=>multi.includes(x))?['a']:multi):S.kanaRows.includes(id)?S.kanaRows.filter(x=>x!==id):SINGLE.includes(id)?[...S.kanaRows.filter(x=>SINGLE.includes(x)),id]:[...S.kanaRows.filter(x=>!SINGLE.includes(x)),id];save();quiz=null;return renderKana()}
  const kc=e.target.closest('.kc[data-k]');if(kc){sayJa(kch(kc.dataset.k));traceIdx=ALLK.findIndex(k=>k.h===kc.dataset.k);return}
  const op=e.target.closest('.op[data-o]');if(op&&quiz&&!quiz.done){quiz.done=true;const ok=op.dataset.o===quiz.ans;op.classList.add(ok?'good':'bad');if(!ok)document.querySelector(`.op[data-o="${quiz.ans}"]`).classList.add('good');
   $('#kfb').className='fb '+(ok?'good':'bad');$('#kfb').textContent=ok?'正解! Correct':`It's “${quiz.ans}”`;sayJa(quiz.ch);markK([quiz.ch],ok);quiz.streak=ok?quiz.streak+1:0;setTimeout(()=>{quiz=newQuiz(quiz);renderKana()},ok?800:1600);return}
