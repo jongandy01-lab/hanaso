@@ -482,7 +482,7 @@ function stepSub(s,u){const lv=u.lv;switch(s.type){
  case 'test':return '10 questions · pass with 8';
  case 'klearn':return 'Tap letters to hear them, trace them';
  case 'kprac':return `Read and write quizzes · ${Math.min(40,S.kanaOK[u.kana]||0)}/40 correct`;
- case 'ktest':return '20 letters · pass with 17'}return ''}
+ case 'ktest':return `All ${ALLK.length} letters · pass with ${Math.ceil(ALLK.length*.85)}`}return ''}
 function markStep(u,s,score){const k=skey(u,s);S.done[k]=Math.max(S.done[k]||0,score);save()}
 
 const TN=()=>S.set.tutor||'Yuki';
@@ -670,9 +670,9 @@ function openStep(u,s){
  if(s.type==='kprac'){S.script=u.kana;REVTAB='kana';kmode='read';quiz=null;go('review');toast(`Get 40 right in Read or Write to finish this step (${Math.min(40,S.kanaOK[u.kana]||0)}/40).`);return}
  if(s.type==='talk'){S.topic='unit';save();go('talk');return}
  LZ={u,s,phase:'loading',i:0};go('lesson');
- if(s.type==='ktest'){const pool=shuffle(ALLK.filter(k=>k.h!=='ぢ'&&k.h!=='づ')).slice(0,20);
+ if(s.type==='ktest'){const pool=shuffle(ALLK);
   const qs=pool.map(k=>{const ch=u.kana==='k'?toKata(k.h):k.h;const others=distract(k.r);const c=shuffle([k.r,...others]);return{kind:'mc',promptHTML:`<span class="kbig">${ch}</span>`,choices:c,answer:c.indexOf(k.r),sayAfter:ch,plainChoices:true}});
-  LZ.phase='quiz';startQuiz(qs,{pass:17,onDone:(r,t)=>finishTest(r,t)});return}
+  LZ.phase='quiz';startQuiz(qs,{pass:Math.ceil(qs.length*.85),onDone:(r,t)=>finishTest(r,t)});return}
  loadStep()}
 async function loadStep(regen){const {u,s}=LZ;LZ.phase='loading';LZ.err=null;renderLesson();
  const a=s.type==='test'?(S.attempts[u.id]||1):0;const key=lessonKey(u,s,a);
