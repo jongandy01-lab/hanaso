@@ -1,0 +1,17 @@
+{
+  "name": "Hanasō Japanese",
+  "short_name": "Hanasō",
+  "description": "Learn Japanese from zero to JLPT N1 with an AI tutor, using your own AI provider.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1f3567",
+  "theme_color": "#1f3567",
+  "lang": "en",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

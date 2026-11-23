@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hanasō Japanese</title>
+<meta name="theme-color" content="#1f3567">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hanasō">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: warm, patient tutor; calm and encouraging, a long road made of short daily steps
+   IDEA: a Japanese study notebook stamped with a teacher's red hanko as each unit is passed
+   PICTURE: the N5→N1 path with the English→日本語 mix meter; big Klee One kana and kanji on practice squares
+   COLOUR and TYPE: white paper, ai-iro indigo band, vermilion seal accent; Zen Kaku Gothic New UI, Klee One for characters
+   LAYOUT: phone-first app — indigo header with meter, one view at a time, tab bar at the bottom */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0f1218);--ink:light-dark(#191c24,#eceef3);--mute:light-dark(#5d6372,#9aa1b2);
+--card:light-dark(#f2f3f5,#1a1e28);--line:light-dark(#e1e3e8,#2a3040);
+--ai:light-dark(#1f3567,#17264a);--ai2:light-dark(#2d4a8a,#8fa8e8);--aiSoft:light-dark(#e8ecf6,#1c2742);
+--red:light-dark(#d93d27,#ff6a50);--redSoft:light-dark(#fdeae6,#3a1c18);--ok:light-dark(#1f7a4d,#5fd39a);--okSoft:light-dark(#e3f4ea,#16301f)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Zen Kaku Gothic New",system-ui,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100dvh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent;text-align:inherit}
+:focus-visible{outline:2px solid var(--ai2);outline-offset:2px}
+.kl{font-family:"Klee One","Zen Kaku Gothic New",serif}
+ruby rt{font-size:.55em;color:var(--mute);font-weight:400}
+.hide-furi rt{display:none}
+h3{margin:18px 0 6px;font-size:18px}
+
+header{background:var(--ai);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 16px 12px;flex:none}
+.hrow{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto}
+.brand{font-weight:700;font-size:19px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.brand small{font-weight:400;opacity:.75;font-size:13px}
+@media(max-width:420px){.brand small{display:none}}
+.chip{margin-left:auto;font-size:13px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:99px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meter{max-width:760px;margin:10px auto 0}
+.mbar{height:10px;border-radius:99px;background:rgba(255,255,255,.22);overflow:hidden;position:relative}
+.mbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ff8a72,#e5432c);border-radius:99px;transition:width .8s ease}
+.mlab{display:flex;justify-content:space-between;font-size:12px;opacity:.85;margin-top:4px}
+.seal{width:34px;height:34px;flex:none}
+
+main{flex:1;display:flex;min-height:0;width:100%;max-width:760px;margin:0 auto}
+.view{display:none;flex:1;overflow-y:auto;padding:16px 16px 28px;-webkit-overflow-scrolling:touch}
+.view.on{display:block}
+#talk.on{display:flex;flex-direction:column;padding:0;overflow:hidden}
+nav{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--bg);padding-bottom:env(safe-area-inset-bottom)}
+nav button{padding:8px 0 9px;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:12px;color:var(--mute);min-height:54px;text-align:center}
+nav button b{font-family:"Klee One",serif;font-size:20px;line-height:1.2;font-weight:600}
+nav button.on{color:var(--red)}
+
+/* generic */
+h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
+.sub{color:var(--mute);margin:0 0 14px;font-size:15px}
+.card{background:var(--card);border-radius:16px;padding:16px}
+.btn{background:var(--red);color:#fff;border-radius:12px;padding:12px 18px;font-weight:700;min-height:46px;text-align:center}
+.btn.alt{background:var(--card);color:var(--ink);font-weight:500}
+.card .btn.alt{background:var(--bg);border:1px solid var(--line)}
+.btn.blue{background:var(--ai)}
+.btn:disabled{opacity:.45}
+.btn.wide{width:100%}
+.mini{font-size:13px;color:var(--ai2);padding:6px 8px;border-radius:8px;min-height:34px}
+.mini:hover{background:var(--aiSoft)}
+.seg{display:flex;background:var(--card);border-radius:12px;padding:3px;gap:3px;margin-bottom:12px}
+.seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:14px;min-height:40px;white-space:nowrap;text-align:center}
+.seg button.on{background:var(--bg);box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:700}
+.back{display:inline-flex;align-items:center;gap:4px;color:var(--ai2);font-size:15px;min-height:40px;padding:0 4px;margin:-6px 0 4px -4px}
+.pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:99px;background:var(--aiSoft);color:var(--ai2);white-space:nowrap}
+.pill.red{background:var(--redSoft);color:var(--red)}
+.pill.ok{background:var(--okSoft);color:var(--ok)}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--red);border-radius:99px}
+.bar.ok i{background:var(--ok)}
+.qstat{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);gap:8px}
+.foot{font-size:13px;color:var(--mute);margin-top:16px}
+.err{background:var(--redSoft);border-radius:12px;padding:10px 14px;font-size:14px}
+.loading{text-align:center;padding:48px 10px;color:var(--mute)}
+.loading .seal{width:64px;height:64px;animation:sp 2.4s ease-in-out infinite;display:block;margin:0 auto 12px}
+@keyframes sp{50%{transform:rotate(-12deg) scale(.94)}}
+
+/* path */
+.today{background:var(--ai);color:#fff;border-radius:18px;padding:16px;margin-bottom:18px}
+.today .sub{color:#c9d4f0;margin:2px 0 12px}
+.today h3{margin:4px 0 0;font-size:21px;line-height:1.2;text-wrap:balance}
+.today .row{display:flex;gap:8px;flex-wrap:wrap}
+.today .btn.alt{background:rgba(255,255,255,.14);color:#fff;border:0}
+.plan{list-style:none;padding:0;margin:0 0 12px;font-size:15px}
+.plan li{display:flex;gap:10px;padding:5px 0;align-items:baseline}
+.plan b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.18);font-size:12px;flex:none}
+.lvl{border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.lh{display:flex;align-items:center;gap:12px;padding:14px;width:100%}
+.lh .badge{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-weight:700;font-size:17px;background:var(--card);flex:none}
+.lvl.cur .badge{background:var(--red);color:#fff}
+.lvl.pass .badge{background:var(--ai);color:#fff}
+.lh .w{flex:1}.lh b{display:block}.lh small{color:var(--mute);font-size:13px}
+.ulist{border-top:1px solid var(--line);padding:4px 0}
+.urow{display:flex;align-items:center;gap:12px;padding:10px 14px;width:100%;min-height:56px}
+.urow:disabled{opacity:.5;cursor:default}
+.ust{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--card);flex:none}
+.ust.done{background:var(--ai);color:#fff}.ust.cur{background:var(--red);color:#fff}
+.urow .w{flex:1}.urow b{display:block;font-weight:500;line-height:1.3}.urow small{color:var(--mute);font-size:13px}
+.steps{list-style:none;padding:0;margin:10px 0}
+.steps li button{display:flex;gap:12px;align-items:center;width:100%;padding:11px 2px;border-bottom:1px solid var(--line);min-height:54px}
+.steps .w{flex:1}.steps b{display:block;font-weight:500;line-height:1.3}.steps small{color:var(--mute);font-size:13px}
+.gl{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+
+/* lesson */
+.lcard{background:var(--card);border-radius:18px;padding:18px;text-align:center}
+.kbig{font-family:"Klee One",serif;font-size:clamp(84px,26vw,120px);line-height:1.15;display:block}
+.wbig{font-size:34px;line-height:1.9;display:block}
+.rd{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;text-align:left;margin:12px auto 0;max-width:340px;font-size:15px}
+.rd span{color:var(--mute)}
+.ex{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-top:10px;text-align:left;cursor:pointer}
+.ex .jt{font-size:18px;line-height:1.9}
+.rm{font-size:13px;color:var(--mute);font-style:italic}
+.tr{font-size:14px;color:var(--mute)}
+.tr.blur{filter:blur(5px);user-select:none;cursor:pointer}
+.nav2{display:flex;gap:8px;margin-top:14px}.nav2 .btn{flex:1}
+.dots{display:flex;gap:4px;justify-content:center;margin:10px 0 0;flex-wrap:wrap}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--red)}
+.gpt{border-left:3px solid var(--red);padding:2px 0 2px 14px;margin:18px 0}
+.gpt h4{margin:0;font-size:22px;line-height:1.5}
+.gpt .form{display:inline-block;background:var(--aiSoft);border-radius:8px;padding:3px 9px;font-size:14px;margin:6px 0}
+.qq{font-size:20px;line-height:1.8;margin:12px 0 4px;font-weight:500}
+.passage{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;font-size:17px;line-height:2;margin:10px 0}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.op{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:18px;min-height:54px;line-height:1.7}
+.op.good{background:var(--ok);color:#fff;border-color:transparent}.op.good rt{color:#e6fff0}
+.op.bad{background:var(--red);color:#fff;border-color:transparent}.op.bad rt{color:#ffe9e4}
+.ans{width:100%;font-size:24px;text-align:center;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);margin-top:12px}
+.fb{margin:12px 0 6px;font-weight:700}.fb.good{color:var(--ok)}.fb.bad{color:var(--red)}
+.why{font-size:15px;color:var(--mute);margin-bottom:12px}
+.play{display:flex;align-items:center;gap:14px;background:var(--ai);color:#fff;border-radius:16px;padding:14px 16px;width:100%;margin:12px 0}
+.play svg{width:40px;height:40px;flex:none}
+.play small{display:block;opacity:.8;font-size:13px}
+.line{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.line .who{font-size:13px;font-weight:700;color:var(--ai2);padding-top:4px;white-space:nowrap}
+.line .jt{font-size:18px;line-height:1.9}
+.score{font-size:56px;font-weight:700;line-height:1;margin:8px 0}
+.miss{border-top:1px solid var(--line);padding:10px 0;font-size:15px}
+
+/* talk */
+.topics{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 10px;flex:none;border-bottom:1px solid var(--line);scrollbar-width:none}
+.topics::-webkit-scrollbar{display:none}
+.tp{flex:none;padding:7px 13px;border-radius:99px;background:var(--card);font-size:14px;white-space:nowrap;min-height:38px}
+.tp span{font-size:12px;color:var(--mute);margin-left:5px}
+.tp.on{background:var(--ai);color:#fff}.tp.on span{color:#c9d4f0}
+.tp.unit{border:1.5px solid var(--red)}
+.log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;align-items:flex-start}
+.msg.me{justify-content:flex-end}
+.bub{background:var(--card);border-radius:4px 18px 18px 18px;padding:11px 14px;max-width:88%}
+.me .bub{background:var(--ai);color:#fff;border-radius:18px 4px 18px 18px}
+.bub p{margin:0 0 6px}.bub p:last-child{margin:0}
+.ja{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 11px;margin:6px 0;cursor:pointer}
+.jt{font-size:20px;line-height:1.9}
+.corr{border-left:3px solid var(--red);background:var(--redSoft);border-radius:8px;padding:8px 11px;margin-top:8px;font-size:14px}
+.corr .jt{font-size:18px}
+.vocab{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vc{font-size:13px;background:var(--aiSoft);border-radius:8px;padding:3px 8px}
+.acts{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.sug{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px}
+.sg{border:1px solid var(--ai2);color:var(--ai2);border-radius:99px;padding:6px 12px;font-size:15px;min-height:38px}
+.typing{color:var(--mute);font-size:14px}
+.typing i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--mute);margin:0 2px;animation:bl 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.welcome{margin:auto;text-align:center;max-width:380px;padding:20px 8px}
+.welcome .seal{width:84px;height:84px;margin:0 auto 10px;display:block}
+.welcome h2{font-size:24px;line-height:1.2;margin:0 0 8px;text-wrap:balance}
+.welcome p{color:var(--mute);margin:0 0 16px}
+.uprog{flex:none;padding:6px 16px;font-size:13px;color:var(--mute);background:var(--aiSoft)}
+.comp{flex:none;border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;background:var(--bg)}
+.comp textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 12px;font-size:16px;line-height:1.4;max-height:120px;min-height:44px}
+.ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--card);text-align:center}
+.ib svg{width:22px;height:22px}
+.ib.send{background:var(--red);color:#fff}
+.ib.live{background:var(--red);color:#fff;animation:pu 1.2s infinite}
+@keyframes pu{50%{box-shadow:0 0 0 6px rgba(217,61,39,.25)}}
+.help{flex:none;padding:10px 12px;border-top:1px solid var(--line);background:var(--aiSoft)}
+.help .row{display:flex;gap:8px}
+.help input{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:16px;background:var(--bg)}
+.help .out{margin-top:8px;font-size:14px}
+.notice{margin:10px 16px 0;padding:10px 12px;border-radius:10px;background:var(--redSoft);font-size:14px}
+
+/* kana & review */
+.rows{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.rw{padding:5px 10px;border-radius:8px;background:var(--card);font-size:15px;min-height:36px;font-family:"Klee One",serif}
+.rw.on{background:var(--ai);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.kc{aspect-ratio:1/1;border-radius:10px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center}
+.kc b{font-family:"Klee One",serif;font-size:clamp(22px,6vw,32px);font-weight:400;line-height:1.1}
+.kc small{font-size:12px;color:var(--mute)}
+.kc.m1::after,.kc.m2::after{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#e9a23b}
+.kc.m2::after{background:var(--ok)}
+.kc.blank{background:none}
+.gh{font-size:13px;color:var(--mute);margin:14px 0 6px}
+.big{font-family:"Klee One",serif;font-size:clamp(96px,30vw,150px);line-height:1.1;margin:6px 0;text-align:center}
+.prompt{font-size:30px;font-weight:700;margin:12px 0 2px;text-align:center}
+.trwrap{position:relative;width:min(100%,340px);aspect-ratio:1/1;margin:0 auto;border-radius:14px;overflow:hidden;background:var(--bg);border:2px solid var(--red)}
+.trwrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.tbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.due{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.due b{font-size:34px;line-height:1}
+.search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px;margin:16px 0 8px}
+.wl{list-style:none;margin:0;padding:0}
+.wl li{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.wl .w{flex:1}.wl .wj{font-size:19px;line-height:1.8}.wl .we{font-size:14px;color:var(--mute)}
+.bx{font-size:12px;color:var(--mute);white-space:nowrap}
+.grade{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+
+/* me */
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.st{background:var(--card);border-radius:14px;padding:12px 14px}
+.st b{display:block;font-size:28px;line-height:1.1}.st span{font-size:13px;color:var(--mute)}
+.tgt{display:grid;grid-template-columns:44px 1fr;gap:4px 12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.tgt b{font-size:16px}
+.set{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.set label{flex:1}.set small{display:block;color:var(--mute);font-size:13px}
+.set select,.set input[type=text]{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 10px;font-size:16px;max-width:55%}
+.set input[type=range]{width:42%}
+.sw{width:50px;height:30px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+.sw.on{background:var(--ok)}.sw.on::after{left:23px}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:var(--ai);color:#fff;padding:12px 16px;border-radius:14px;opacity:0;pointer-events:none;transition:.35s;max-width:min(92vw,420px);text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.25);z-index:9}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="seal" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#d93d27"/><circle cx="32" cy="32" r="24.5" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/><text id="sealch" x="32" y="43" text-anchor="middle" font-family="Klee One,serif" font-size="30" font-weight="600" fill="#fff">ゆ</text></symbol>
+<symbol id="playi" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#fff" opacity=".16"/><path d="M16 12l12 8-12 8z" fill="#fff"/></symbol>
+</defs></svg>
+
+<header>
+  <div class="hrow">
+    <svg class="seal"><use href="#seal"/></svg>
+    <div class="brand">話そう <small id="brandsub">Hanasō with Yuki</small></div>
+    <div class="chip" id="lvchip">N5</div>
+  </div>
+  <div class="meter">
+    <div class="mbar"><i id="mfill" style="width:10%"></i></div>
+    <div class="mlab"><span>English</span><span id="mtext">10% 日本語</span><span>日本語</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="view on" id="path"></section>
+  <section class="view" id="lesson"></section>
+  <section class="view" id="talk">
+    <div class="topics" id="topics"></div>
+    <div id="notice"></div>
+    <div class="uprog" id="uprog" hidden></div>
+    <div class="log" id="log"></div>
+    <div class="sug" id="sug"></div>
+    <div class="help" id="help" hidden>
+      <div class="row"><input id="hq" placeholder="How do I say… (type English)" enterkeyhint="go"><button class="btn" id="hgo" style="padding:8px 14px">Ask</button></div>
+      <div class="out" id="hout"></div>
+    </div>
+    <div class="comp">
+      <button class="ib" id="hbtn" aria-label="How do I say…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg></button>
+      <textarea id="box" rows="1" placeholder="Reply, or try Japanese…" enterkeyhint="send"></textarea>
+      <button class="ib" id="mic" hidden aria-label="Speak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
+      <button class="ib send" id="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+    </div>
+  </section>
+  <section class="view" id="review"></section>
+  <section class="view" id="me"></section>
+</main>
+
+<nav id="nav">
+  <button data-v="path" class="on"><b>学</b>Path</button>
+  <button data-v="talk"><b>話</b>Talk</button>
+  <button data-v="review"><b>復</b>Review</button>
+  <button data-v="me"><b>私</b>Progress</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KJ='[\\u3400-\\u9fff\\u3005\\u30f6]+';
+const RX=new RegExp('('+KJ+')\\{([^}]+)\\}','g');
+const ruby=s=>esc(s).replace(RX,'<ruby>$1<rt>$2</rt></ruby>');
+const plain=s=>String(s||'').replace(/\{[^}]*\}/g,'');
+const reading=s=>String(s||'').replace(RX,'$2');
+const hasJP=s=>/[぀-ヿ㐀-鿿]/.test(s);
+const hasKanji=s=>/[㐀-鿿]/.test(plain(s));
+const toKata=s=>s.replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+96));
+const toHira=s=>String(s).replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-96));
+const norm=s=>toHira(plain(s)).replace(/[\s。、！？!?.,・〜~（）()「」\-]/g,'');
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const DAY=864e5,today=()=>new Date().toISOString().slice(0,10);
+function toast(t){const el=$('#toast');el.innerHTML=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),4200)}
+
+/* ================= curriculum ================= */
+const LVS=[
+{id:'n5',name:'N5',title:'Foundations',words:800,kanji:100,sets:8,wc:10,kc:0,listen:2,rate:.85,genres:['daily-life','slice-of-life anime'],len:'6–8 short lines',qlang:'in English',u:[
+ {kana:'h',t:'Hiragana',jp:'ひらがな',th:'the 71 hiragana sounds'},
+ {kana:'k',t:'Katakana',jp:'カタカナ',th:'the 71 katakana sounds, used for loanwords'},
+ ['Meeting people','はじめまして',['XはYです','じゃありません／じゃないです','question particle か','の (possession)','も (also)'],'greetings, introductions, countries, nationalities, jobs','人日本名私学生先'],
+ ['Numbers, time & money','数と時間',['numbers and counting','～時～分','いくらですか・～円','～から～まで'],'numbers, telling time, prices, phone numbers, ages','一二三四五六七八九十百千万円時分半'],
+ ['Things & places','物と場所',['これ・それ・あれ・どれ','ここ・そこ・あそこ','あります・います','に (location)','position words 上・下・中・前・後ろ'],'rooms, objects, buildings, where things are','上下中前後外右左何'],
+ ['Daily routine','毎日の生活',['～ます・～ません・～ました','を (object)','に (time)','で (place of action)','へ (direction)'],'daily actions, meals, work, home','行来見食飲聞読書今'],
+ ['Calendar & week','カレンダー',['days and dates','～曜日','いつ・～ごろ','と (with)','～から (because)'],'days, months, schedules, weekends, holidays','月火水木金土曜年週毎'],
+ ['Describing things','形容詞',['い-adjectives','な-adjectives','adjective past and negative','とても・あまり','～が好き・嫌い・上手'],'describing people, places, food, weather','大小高安新古長白多少'],
+ ['Shopping & food','買い物と食べ物',['～をください','～がほしい','～たい','counters つ・個・枚・本','～にします'],'shops, food, drinks, restaurants, convenience stores','買物店魚肉茶'],
+ ['Requests & invitations','お願いと誘い',['て-form','～てください','～ませんか・～ましょう','～ましょうか (offering)','～てもいいですか'],'asking favors, invitations, offers, permission','話言立休出入待'],
+ ['Getting around & weather','交通と天気',['に乗る・を降りる','で (means)','～でしょう','～て、～ (sequence)','どうやって・どのくらい'],'trains, buses, directions, weather','電車駅道天気雨東西南北'],
+ ['People & everyday life','人と生活',['～ています (ongoing and state)','～ないでください','～前に・～た後で','～とき'],'family, friends, hobbies, what people are doing','父母子女男友山川花空生']]},
+{id:'n4',name:'N4',title:'Everyday Japanese',words:700,kanji:200,sets:7,wc:10,kc:3,listen:2,rate:.92,genres:['slice-of-life anime','daily-life','family drama'],len:'8–10 lines',qlang:'in English',u:[
+ ['Plain forms & casual talk','普通形',['dictionary form','ない-form','た-form','casual speech with friends'],'friends, hobbies, free time'],
+ ['Experiences','経験',['～たことがある','～たり～たりする','～ながら','～てから'],'travel, experiences, weekends'],
+ ['Ability & change','できること',['potential form','～ことができる','～ようになる','～ようにする'],'skills, sports, learning, health'],
+ ['Giving & receiving','あげる・くれる・もらう',['あげる・くれる・もらう','～てあげる','～てくれる','～てもらう'],'gifts, favors, family, celebrations'],
+ ['Plans & intentions','予定',['volitional form ～よう','～つもり','～予定','～と思う'],'plans, the future, school and work schedules'],
+ ['If & when','条件',['～たら','～ば','～と (natural result)','～なら'],'advice, directions, machines, everyday problems'],
+ ['Rules & permission','ルール',['～なければならない','～なくてもいい','～てもいい','～てはいけない'],'rules, manners, workplaces, public places'],
+ ['Guessing & hearsay','推量と伝聞',['～そう (looks like)','～そうだ (I heard)','～らしい・～みたい','～かもしれない・～でしょう'],'weather, rumors, feelings, appearances'],
+ ['Passive & causative','受身と使役',['passive form','causative form','～させてください','～てしまう'],'troubles, accidents, parents and children, work'],
+ ['Polite speech','敬語の基本',['honorific verbs いらっしゃる・召し上がる','humble verbs 伺う・申す・参る','お～になる','お～する・ご～する'],'shops, offices, customers, formal situations']]},
+{id:'n3',name:'N3',title:'Bridge to native media',words:2200,kanji:370,sets:15,wc:15,kc:3,listen:3,rate:1,genres:['anime','J-drama','simple TV news report'],len:'10–12 lines',qlang:'in simple Japanese',u:[
+ ['Timing','時の表現',['～うちに','～最中に','～たとたん','～ばかり (just did)','～ところだ'],'daily events, timing, sudden happenings'],
+ ['Cause & result','原因と結果',['～せいで・～おかげで','～ため(に) (reason)','～によって','～から(こそ)'],'health, environment, success and failure'],
+ ['Contrast & concession','逆接',['～のに','～くせに','～ても・～たって','～わりに・～にしては'],'complaints, relationships, expectations'],
+ ['Reported speech','伝える',['～によると','～ということだ','～って (casual quoting)','～とか','～っけ'],'news, gossip, messages, memories'],
+ ['Degree & emphasis','程度',['～ほど','～くらい','～ば～ほど','～さえ','～こそ'],'feelings, comparisons, extremes'],
+ ['Purpose & decisions','目的と決定',['～ように (so that)','～ことにする','～ことになる','～ために (purpose)'],'goals, work decisions, life changes'],
+ ['Comparison & stance','比較',['～より～方が','～というより','～に比べて','～に対して'],'opinions, society, cultural comparisons'],
+ ['Topic & viewpoint','話題と立場',['～について・～に関して','～にとって','～として','～において'],'work, school, community, events'],
+ ['Anime & casual speech','アニメの言葉',['～ちゃう・～じゃう','～てる・～とく','～なきゃ・～なくちゃ','sentence endings ぜ・ぞ・わ・かしら・な'],'anime and manga dialogue, school life, friends, slang'],
+ ['News Japanese','ニュースの日本語',['～とみられる','～ことが分かった','～を受けて','～に向けて','Sino-Japanese news vocabulary'],'headlines, weather reports, incidents, economy basics']]},
+{id:'n2',name:'N2',title:'Dramas & news',words:2300,kanji:370,sets:12,wc:20,kc:3,listen:3,rate:1.05,genres:['J-drama','TV news report','anime'],len:'12–14 lines',qlang:'in Japanese',u:[
+ ['Formal connectors','接続表現',['～にもかかわらず','～ものの','～とはいえ','～一方(で)'],'work, society, essays'],
+ ['Scope & range','範囲',['～に限って・～に限らず','～をはじめ','～にわたって','～を通じて'],'business, events, regions, time spans'],
+ ['Viewpoint & basis','観点と根拠',['～からすると・～からいうと','～上で','～に基づいて','～をもとに'],'research, reports, decisions'],
+ ['Inevitability & tendency','傾向',['～ざるを得ない','～わけにはいかない','～がちだ・～気味','～っぽい'],'obligations, habits, health, personality'],
+ ['Strong feelings','感情',['～てたまらない・～てしかたがない','～ものだ','～ことか','～に決まっている'],'emotions, nostalgia, drama dialogue'],
+ ['Conditions','条件',['～ない限り','～次第','～とすれば・～としたら','～ものなら'],'negotiations, plans, possibilities'],
+ ['Change over time','変化',['～につれて','～に伴って','～とともに','～一方だ','～つつある'],'trends, technology, an aging society, the economy'],
+ ['Business keigo','ビジネス敬語',['尊敬語 in depth','謙譲語 in depth','～させていただく','business email and phone phrases'],'offices, clients, meetings, emails'],
+ ['Drama dialogue & Kansai-ben','ドラマと関西弁',['～じゃん・～もん','～わけ・～っけ','Kansai-ben ～へん・～や・ほんま','gendered and generational speech'],'TV dramas, family, romance, regional speech'],
+ ['News & society','ニュースと社会',['～をめぐって','～に向けて','～を受けて','～とされる'],'politics, economy, disasters, crime, world news']]},
+{id:'n1',name:'N1',title:'Native comprehension',words:4000,kanji:1000,sets:20,wc:20,kc:5,listen:4,rate:1.12,genres:['TV news report','J-drama','fast-paced anime','street interview'],len:'14–18 lines at natural length',qlang:'in Japanese',u:[
+ ['Literary connectors','文語的な接続',['～ながらも','～といえども','～であれ','～ならいざしらず'],'literature, essays, history'],
+ ['Extremes','極端な表現',['～極まりない・～の極み','～の至り','～てやまない','～を禁じ得ない'],'formal speeches, emotions, ceremonies'],
+ ['Instant succession','直後',['～や否や','～が早いか','～なり','～そばから','～が最後'],'action scenes, narratives, events'],
+ ['Exclusion & worth','除外と価値',['～をよそに','～をおいて','～に足る・～に足りない','～にかたくない'],'society, leadership, criticism'],
+ ['Judgment & duty','判断と義務',['～まじき','～べからず','～ずにはおかない','～までもない'],'ethics, law, public life'],
+ ['Written style','書き言葉',['である体','～をもって','～にあって','～たる','～ごとき'],'official documents, academic writing'],
+ ['Abstract topics','抽象的な話題',['～いかんで・～いかんによらず','～をものともせず','～を皮切りに','～に即して'],'science, philosophy, law, medicine'],
+ ['Editorials & analysis','社説と分析',['～を余儀なくされる','～に踏み切る','～とあって','～ともなると'],'editorials, economy, diplomacy'],
+ ['Native-speed media','ネイティブの速さ',['fast casual contractions','slang and youth speech','dialects: Kansai, Hakata, Tohoku','character speech: ござる・じゃ・わらわ'],'anime, variety shows, J-dramas, street interviews'],
+ ['Mastery','総仕上げ',['四字熟語','ことわざ・慣用句','onomatopoeia 擬音語・擬態語','nuance and register'],'idioms, culture, everything together']]}];
+const UNITS=[];
+LVS.forEach((lv,li)=>{let n=0;lv.units=lv.u.map((a,ui)=>{let u;
+ if(a.kana){u={...a,id:lv.id+'-'+a.kana,num:0,g:[]}}else{n++;u={t:a[0],jp:a[1],g:a[2],th:a[3],k:a[4]||'',num:n,id:lv.id+'-'+String(n).padStart(2,'0')}}
+ u.lv=lv;u.li=li;u.gi=UNITS.length;
+ u.st=li===0?(u.kana||n<=3?1:n<=7?2:3):li===1?(n<=5?3:4):li===2?5:6;
+ UNITS.push(u);return u})});
+const UBYID=Object.fromEntries(UNITS.map(u=>[u.id,u]));
+UNITS.filter(u=>!u.kana).forEach((u,k)=>{u.book=k<30?[2*k+1,2*k+2]:[3*(k-30)+1,3*(k-30)+2,3*(k-30)+3]});
+function stepsOf(u){
+ if(u.steps)return u.steps;
+ if(u.kana)return u.steps=[{id:'learn',type:'klearn'},{id:'prac',type:'kprac'},{id:'X',type:'ktest'}];
+ const lv=u.lv;
+ const ws=[...Array(lv.sets)].map((_,i)=>({id:'W'+(i+1),type:'words',i}));
+ const G=Math.ceil(u.g.length/2);
+ const gs=[...Array(G)].map((_,i)=>({id:'G'+(i+1),type:'grammar',i,pts:u.g.slice(i*2,i*2+2)}));
+ const ls=[...Array(lv.listen)].map((_,i)=>({id:'L'+(i+1),type:'listen',i}));
+ const bs=(u.book||[]).map((n,i)=>({id:'B'+(i+1),type:'study',i,n}));
+ const mix=[];for(let i=0;i<Math.max(G,ls.length,bs.length);i++){if(gs[i])mix.push(gs[i]);if(ls[i])mix.push(ls[i]);if(bs[i])mix.push(bs[i])}
+ const out=[],gap=ws.length/(mix.length+1);let mi=0;
+ ws.forEach((w,i)=>{out.push(w);while(mi<mix.length&&i+1>=gap*(mi+1))out.push(mix[mi++])});
+ while(mi<mix.length)out.push(mix[mi++]);
+ out.push({id:'T',type:'talk'},{id:'X',type:'test'});
+ return u.steps=out}
+const kanjiForSet=(u,i)=>{const cs=[...(u.k||'')];if(!cs.length)return[];const per=Math.ceil(cs.length/u.lv.sets);return cs.slice(i*per,i*per+per)};
+const STAGES=[{mix:10,name:'Mostly English',rule:'About 85% English. Speak English, and weave in 1–2 useful Japanese phrases per turn as separate "ja" lines. Accept English or romaji replies and gently invite the learner to try the phrase.'},
+ {mix:35,name:'Kana steps',rule:'About 60% English, 40% Japanese. Put short, simple Japanese sentences on "ja" lines, mostly in hiragana. English lines explain. Encourage replies in kana.'},
+ {mix:60,name:'Real conversation',rule:'About 40% English. Speak mainly in short です/ます Japanese; English only for a quick note. Expect Japanese replies.'},
+ {mix:80,name:'Confident',rule:'About 20% English: Japanese conversation with at most one short English tip line. Use kanji with readings.'},
+ {mix:95,name:'Immersion',rule:'Japanese only on spoken lines: no "en" lines. English appears only in each line\'s hidden "en" translation and in correction notes. Natural everyday Japanese.'},
+ {mix:100,name:'Native-style',rule:'Fully Japanese: no "en" lines, correction "why" notes in simple Japanese. Natural phrasing, casual or keigo as the situation demands.'}];
+const TOPICS=[
+ {id:'intro',en:'Greetings',jp:'あいさつ',scene:'Meeting your tutor for the first time: names, where you are from, what you do.'},
+ {id:'daily',en:'Daily life',jp:'毎日',scene:'Daily routine: waking up, meals, work hours, evenings and weekends.'},
+ {id:'cafe',en:'Café',jp:'カフェ',scene:'The tutor plays a café server; the learner orders drinks and food, sizes, here or to go, paying.'},
+ {id:'konbini',en:'Convenience store',jp:'コンビニ',scene:'At a convenience store: bag or no bag, heating food, paying by card.'},
+ {id:'shop',en:'Shopping',jp:'買い物',scene:'Clothes shopping: sizes, colors, trying things on, prices.'},
+ {id:'train',en:'Train & directions',jp:'駅',scene:'At a station: tickets, platforms, asking the way politely.'},
+ {id:'chat',en:'Small talk',jp:'雑談',scene:'Small talk: weather, seasons, hobbies, how was your day.'},
+ {id:'polite',en:'Polite & formal',jp:'敬語',scene:'Formal Japanese: formal self-introduction, requests with いただけますか, apologizing, phone manners.'},
+ {id:'bible',en:'Bible lesson',jp:'聖書レッスン',scene:''},
+ {id:'teach',en:'You teach',jp:'教える練習',scene:''},
+ {id:'media',en:'Anime & dramas',jp:'アニメ・ドラマ',scene:'Talking about anime, dramas and shows the learner watches, characters and plots (no spoilers needed).'},
+ {id:'news',en:'The news',jp:'ニュース',scene:'Discussing a recent kind of news story (economy, weather, technology, sports) in level-appropriate Japanese.'}];
+const LFF=[["How Can the Bible Help You?", "聖書はどのように役立つ？"], ["The Bible Gives Hope", "聖書を読むと希望が持てる"], ["Can You Trust the Bible?", "聖書は信用できる本？"], ["Who Is God?", "聖書の神とは？"], ["The Bible Is God's Message to Us", "聖書は神からのメッセージ"], ["How Did Life Begin?", "生命はどのようにして始まった？"], ["What Is Jehovah Like?", "エホバはどんな神？"], ["You Can Be Jehovah's Friend", "あなたもエホバと友達になれる"], ["Draw Close to God Through Prayer", "祈ることによって神との友情を育てる"], ["How Can the Meetings of Jehovah's Witnesses Benefit You?", "エホバの証人の集会に行くとよいのはどうして？"], ["How You Can Get the Most Out of the Bible", "聖書から十分に学ぶには？"], ["What Will Help You to Keep Studying the Bible?", "聖書を学び続けるのに役立つこと"], ["How False Religion Misrepresents God", "多くの宗教は神のことを正しく伝えていない"], ["How Can Our Worship Be Pleasing to God?", "神に喜ばれるのはどんな崇拝？"], ["Who Is Jesus?", "イエス・キリストって何者？"], ["What Did Jesus Do While on Earth?", "イエスは地上でどんなことをした？"], ["What Is Jesus Like?", "イエスはどんな方？"], ["How to Identify Real Christians", "本物のクリスチャンはどんな人たち？"], ["Are Jehovah's Witnesses Real Christians?", "エホバの証人は本物のクリスチャン？"], ["How the Congregation Is Organized", "会衆はどのように組織されている？"], ["How Is the Good News Being Preached?", "良い知らせはどのように伝えられている？"], ["How Can You Share the Good News?", "あなたも良い知らせを伝えられる"], ["Baptism—A Worthwhile Goal!", "バプテスマは大切なステップ"], ["What Is the Truth About Angels?", "天使とはどんな存在？"], ["What Is God's Purpose for Us?", "神は人間がどう生きることを望んでいる？"], ["Why Do Evil and Suffering Exist?", "悪いことや苦しいことがあるのはどうして？"], ["How Can Jesus' Death Save Us?", "イエスの死によって私たちは救われる"], ["Show Appreciation for What Jehovah and Jesus Did for You", "エホバとイエスがしてくれたことに感謝する"], ["What Happens When We Die?", "死ぬとどうなる？"], ["Your Loved Ones Can Live Again!", "亡くなった家族や友達にまた会える"], ["What Is God's Kingdom?", "神の王国って何？"], ["God's Kingdom Now Rules!", "神の王国はもう存在している"], ["What the Kingdom Will Accomplish", "神の王国は何をする？"], ["How Can We Show Our Love for Jehovah?", "エホバを愛していることを行動で示す"], ["How to Make Good Decisions", "どうすれば良い判断ができる？"], ["Be Honest in All Things", "いつも正直でいることは大切"], ["What the Bible Says About Work and Money", "仕事やお金について聖書は何と言っている？"], ["Appreciate the Gift of Life", "命という贈り物に感謝する"], ["God's View of Blood", "血は神にとってどういうもの？"], ["How Can We Be Clean in God's Eyes?", "どうすれば神から見て清い人になれる？"], ["What Does the Bible Say About Sex?", "性について聖書は何と言っている？"], ["What Does the Bible Say About Singleness and Marriage?", "独身でいることや結婚について聖書は何と言っている？"], ["How Should Christians View Alcohol?", "クリスチャンはお酒を飲んでもいい？"], ["Do All Celebrations Please God?", "神に喜ばれないお祝いってある？"], ["What It Means to Be Neutral", "中立であるとはどういうこと？"], ["Why Make a Dedication and Get Baptized?", "神に献身してバプテスマを受けるのはどうして？"], ["Are You Ready to Get Baptized?", "バプテスマを受けるにはどうしたらいい？"], ["Choose Your Friends Wisely", "どんな人たちと友達になったらいい？"], ["How Can Your Family Be Happy?—Part 1", "幸せな家族になる パート１"], ["How Can Your Family Be Happy?—Part 2", "幸せな家族になる パート２"], ["How Can You Please Jehovah With Your Speech?", "エホバに喜ばれる話し方をする"], ["Why Our Clothing and Appearance Matter", "良い身だしなみは大切"], ["Choose Entertainment That Pleases Jehovah", "エホバの考えに沿って楽しい時間を過ごす"], ["The Role of “the Faithful and Discreet Slave”", "「忠実で思慮深い奴隷」の役割"], ["Support Your Local Congregation", "会衆をサポートする"], ["Maintain Unity in the Congregation", "会衆のみんなと仲良くする"], ["What if You Commit a Serious Sin?", "重大な罪を犯してしまったら？"], ["Remain Loyal to Jehovah", "エホバを愛して従い続ける"], ["You Can Endure Persecution", "迫害されても大丈夫"], ["Continue Making Progress", "クリスチャンとして成長し続ける"]];
+const LFH=[["聖書はどんな疑問に答えている？", "聖書は日常生活にどのように役立つ？", "聖書は頼りになる本", "聖書は疑問に答えてくれる", "聖書は楽しく読める本", "聖書を理解できるよう助けてもらえる"], ["どんな希望がある？", "聖書によると将来はどうなる？", "聖書の約束は信じられる？", "何も問題がない世界で", "希望があると人生が明るくなる"], ["聖書に書かれていることは作り話？", "聖書に書かれていることは古くて当てにならない？", "将来について聖書に書かれていることは信じられる？", "聖書に書かれていることは科学と合っている", "聖書には重要な出来事が予告されていた", "聖書には今の時代のことも"], ["神の名前は何？神はその名前を知ってほしいと思っている？", "聖書からエホバについて何が分かる？", "神にはたくさんの称号があるが，名前は1つ", "エホバは自分の名前を知って", "エホバはあなたと友達になりたいと思っている"], ["聖書は人間が書いたのに，神からのメッセージだと言えるのはどうして？", "どれほどの人が聖書を読める？", "私たちが読めるように，エホバは聖書をどのように守ってきた？", "聖書は今の時代まで守られてきた", "聖書は全ての人のための本"], ["宇宙はどのようにしてできた？", "神が地球を造ったのはなぜ？", "人間は動物とどこが違う？", "生命は造られた", "創造について聖書に書かれていることは", "神が創造したものの中でも，人間は特別"], ["神を見ることはできる？", "エホバはどんな性格？", "エホバが私たちを愛していることはどうして分かる？", "聖なる力は，神が送り出す力", "エホバは魅力的な性格を持つ神", "エホバは人間を大切に思っている", "エホバの性格は自然界に表れている"], ["エホバは何と言ってくれている？", "エホバが最高の友達だと言えるのはどうして？", "エホバは友達にどうしてほしいと思っている？", "エホバが友達に期待していること", "エホバが友達のためにすること"], ["誰にどんなことを祈れる？", "どのように祈ったらよい？", "神はどのように祈りに答えてくれる？", "神に祈りを聞いてもらうにはどんなことが大切？", "神に喜ばれるのは心からの祈り", "神に祈れるのは素晴らしいこと", "祈ることを習慣にする"], ["仲間と集まる一番の理由は何？", "集会でどんなことを学べる？", "集会でいろいろな人に会うと，どんな良いことがある？", "エホバの証人の集会", "頑張って集会に行くことは大切"], ["聖書を毎日読むとよいのはどうして？", "いつ聖書を読んだらいい？", "聖書を読むことを楽しむ", "聖書レッスンの予習をする"], ["聖書を学ぶことに価値があるのはどうして？", "聖書の真理にはどれほどの価値がある？", "学び続けるようにエホバはどのように助けてくれる？", "聖書を学ぶことを優先する", "反対されても諦めない", "エホバに助けてもらう", "聖書を毎日読むとよいのはどうしてですか。あな"], ["多くの宗教はどんな間違った教えを広めてきた？", "多くの宗教はどんな間違った行動を取ってきた？", "神は間違った宗教についてどう思っている？", "全ての宗教が神から見て", "間違った宗教は", "神は間違った宗教から", "真の神について"], ["何に従って崇拝したらいい？", "エホバをどのように崇拝したらいい？", "仲間と一緒にエホバを崇拝するのはどうして？", "像を使って崇拝してはいけない", "集会で神を崇拝する", "学んだことを誰かに伝えると"], ["イエスって何者？", "イエスが地上に来たのはどうして？", "イエスは今どこにいる？", "イエスは全能の神ではない", "イエスは約束されていたメシア", "イエスについて知ることは"], ["イエスはおもに何をした？", "イエスが奇跡を行ったのはどうして？", "イエスの生き方から何を学べる？", "イエスは良い知らせを広めた", "イエスは生活に", "イエスは奇跡を行った"], ["イエスは父エホバとどんなところが似ている？", "イエスがエホバを愛していることはどうして分かる？", "イエスが人を愛していることはどうして分かる？", "イエスは父エホバを", "イエスは人のことを深く気遣っている", "イエスは惜しみなく与える"], ["クリスチャンとは？", "本物のクリスチャンはどのように愛を示す？", "本物のクリスチャンはどんな活動に励んでいる？", "聖書の真理を深く学んでいる", "聖書の真理を伝えている", "伝えている真理に従っている", "互いを愛している"], ["エホバの証人は何を固く信じている？", "「エホバの証人」という名称を使っているのはどうして？", "エホバの証人はどのようにイエスの愛に倣っている？", "エホバの証人は聖書を固く信じている", "エホバの証人は", "エホバの証人は互いを愛している"], ["会衆を指導しているのは誰？", "長老とはどんな人たちで，何をする？", "会衆の一人一人は何をする？", "イエスは爽やかなリーダー", "長老たちは手本を示す", "長老たちに協力する"], ["マタイ24章14節の言葉は今その通りになっている？", "多くの人に伝えるためにどんな努力が払われている？", "良い知らせを伝えるのは一部の人だけ？", "全ての人に伝えるために努力している", "神と共に働いている", "神の命令に従って伝道している"], ["どうすれば学んだことを家族や友達に伝えられる？", "会衆の人たちと一緒に伝道するとよいのはどうして？", "エホバが助けてくれる", "相手を尊重する", "良い知らせを伝えると"], ["バプテスマって何？", "バプテスマは何のために受ける？", "バプテスマを受けるにはどうしたらいい？", "イエスのバプテスマから", "バプテスマを目指す", "バプテスマを受けるとエホバの家族の一員になる"], ["天使って何？", "サタンと邪悪な天使たちって誰？", "サタンと邪悪な天使たちはどうやって人間を惑わしている？", "良い天使たちは人が", "心霊術をきっぱり避ける", "サタンと邪悪な天使たちに勝つ"], ["エホバは私たちにどんな人生を送ってほしいと思っている？", "今どうすれば有意義な人生を送れる？", "エホバは人間が素晴らしい人生を", "エホバが望んでいることは変わっていない", "エホバのために生きるなら"], ["サタンはどのように諸悪の根源となった？", "アダムとエバはどうすることにした？", "アダムとエバの行動のせいで私たちはどんな影響を受けている？", "人間が苦しんでいるのは", "サタンが世界を支配してきた結果", "エホバは私たちが苦しむのを見て", "神は人間の苦しみを終わらせてくれる"], ["イエスの死から今どんな恩恵を受けられる？", "イエスの死から将来どんな恩恵を受けられる？", "イエスの死のおかげで", "イエスの死から", "贖いはエホバからの贈り物"], ["神とキリストに感謝を表す1つの方法は？", "どんな特別な催しでエホバとイエスに感謝を表せる？", "感謝を行動で表す", "イエスに見習う", "キリストの死の記念式に出席する"], ["死ぬとどうなる？", "死について本当のことを知ると，どんな良いことがある？", "死んだ人の状態についての真実", "死について本当のことを知ると", "死について本当のことを知ると"], ["エホバは亡くなった人たちをどうしたいと思っている？", "本当に人が生き返るとどうして分かる？", "あなたが亡くした家族や友達にはどんな希望がある？", "イエスは死んだ人を", "非常に大勢の人が生き返る", "復活について知ると慰められ，希望を持てる"], ["神の王国って何？王は誰？", "誰がイエスと一緒に治める？", "神の王国の政府はどんな点で人間の政府より優れている？", "強力な政府が地球全体を治める", "人間が治めてもうまくいかない", "神の王国には最高の法律がある"], ["聖書の預言から何が分かる？", "1914年以来，どんな状態が見られる？", "神の王国が設立されてから世界が非常に悪くなったのはどうして？", "1914年から世界は変わった", "神の王国がもう存在していることを"], ["神の王国はどうやって悪いことをなくして世界を平和にする？", "神が思い描いた通りの地球ではどんな暮らしが待っている？", "悪い人がいなくなった後，神の王国は何をする？", "神の王国は人間の政府を", "イエスは理想の王", "神の王国のおかげで", "あなたはバプテスマを受けたいと思いますか。どう"], ["エホバを愛していることをどうすれば示せる？", "エホバを愛していることを示すのが難しい場合があるのはどうして？", "あなたにも関係がある問題", "エホバの心を喜ばせる", "あなたもエホバに従い続けられる", "エホバに従うことは"], ["良い判断をするのに聖書はどう役立つ？", "何かを決める前にどんなことを考えるといい？", "聖書を頼りにする", "良心を神の考えに合わせる", "他の人の良心を尊重する"], ["正直でいる一番の理由は何？", "いつも正直でいるにはどうしたらいい？", "正直に行動するとどんな良いことがある？", "正直でいることは", "どんな時にも正直に行動する", "正直でいることは"], ["聖書は仕事について何と言っている？", "お金に対するバランスの取れた見方とは？", "お金を自分のためだけでなく，どう使ったらいい？", "仕事よりもエホバを大切に", "持っている物で満足することは", "エホバは必要なものを"], ["命に感謝するのはどうして？", "エホバに命という贈り物への感謝を表すにはどうしたらいい？", "健康に気を配る", "けがや死亡事故を防ぐために", "まだ生まれていない子供の命も"], ["エホバにとって血はどういうもの？", "神は血のどんな用途を禁じている？", "医療に関して", "エホバの証人は", "血液分画が関係する場合"], ["体や身の回りを清潔にしておくために，どんなことができる？", "清い人でいるために，どんなことを避ける必要がある？", "悪い習慣をやめる", "良くない考えや行いを避ける"], ["エホバは性関係についてどう思っている？", "性的不道徳とはどういうこと？", "性的不道徳から逃げ去る", "誘惑に負けないようにする", "エホバの基準に従うことは"], ["独身でいることにはどんなメリットがある？", "結婚することにはどんなメリットがある？", "エホバは結婚についてどんなことを定めている？", "独身のメリットを生かす", "結婚相手をよく選ぶ", "エホバの見方に沿って", "結婚に関する"], ["お酒は飲んではいけない？", "お酒を飲む人に聖書はどんなアドバイスをしている？", "飲酒に関する他の人の考えをどうすれば尊重できる？", "飲むかどうかを決める", "飲む量を決める", "飲酒の問題を克服する"], ["多くの祝い事がエホバに喜ばれないのはどうして？", "人をたたえる祝い事をエホバはどう感じる？", "どんな祝い方は神に受け入れられない？", "エホバを不快にさせる祝い事を避ける", "自分の考えを他の人に分かってもらう", "エホバは私たちに楽しんでほしいと思っている"], ["本物のクリスチャンは人間の政府をどう見る？", "中立であることをどうすれば示せる？", "本物のクリスチャンはいつも中立", "考えと行動が中立であるようにする"], ["献身したいと思うのはどうして？", "バプテスマを受けてエホバの証人になると，どんな祝福がある？", "誰に仕えるかを", "エホバの愛についてじっくり考える", "献身した人はたくさんの祝福を受ける"], ["バプテスマを受けるにはどれほどの知識が必要？", "バプテスマを受ける前にどんなことをする必要がある？", "不安のせいでためらうべきでないのはどうして？", "エホバのことをもっとよく知る", "いろいろなハードルを乗り越える", "エホバに頼って助けてもらう", "エホバの愛への感謝を深める"], ["友達からどんな影響を受ける？", "私たちがどんな友達を選ぶかは，エホバにとって大事？", "良くない交友に注意する", "いろいろな人といい友達になれる", "良い友達をつくる"], ["聖書は夫にどんなアドバイスをしている？", "聖書は妻にどんなアドバイスをしている？", "夫婦の絆を強くするにはどうしたらいい？", "夫は妻を愛して大切にする", "妻は夫を愛して敬う", "夫婦間の問題を乗り越える"], ["エホバは親にどんなアドバイスをしている？", "エホバは子供にどんなアドバイスをしている？", "家族が神との絆を強めるにはどうしたらいい？", "愛情を込めて子供を教える", "子供を守る", "親を敬う", "家族で一緒に聖書を学ぶ"], ["どんなことを話すといい？", "どんなことは話すべきではない？", "どうすれば爽やかな話し方ができる？", "何を，いつ，どのように言うか", "人について良いことを話す", "家族に優しく話す"], ["どんな原則に沿って身だしなみを整えるといい？", "仲間のクリスチャンがどう思うかを考えた方がいい？", "エホバを崇拝していない人たちは，私たちの身だしなみを見てどう思う？", "良い身だしなみはエホバへの敬意の表れ", "どうすれば"], ["何をして楽しむかを決める時に，どんなことを考えるといい？", "楽しいことに時間を使い過ぎないのが大事なのはどうして？", "良くないものを避ける", "時間の使い方に気を付ける", "良いものを選んで楽しむ"], ["「忠実で思慮深い奴隷」って誰のこと？", "忠実な奴隷はどんな食物を準備してくれる？", "エホバに仕えるには組織が必要", "忠実な奴隷は"], ["どうすれば自分の時間や体力を使って会衆をサポートできる？", "どうすれば自分のお金や持ち物を使って会衆をサポートできる？", "自分のお金や持ち物を寄付する", "王国会館の維持管理を手伝う", "兄弟たちはより多くの責任を担"], ["エホバの証人はどんなところが際立っている？", "会衆のみんなと仲良くするためにどうしたらいい？", "仲間のクリスチャンとの関係がぎくしゃくした場合，どうしたらいい？", "偏見や差別の気持ちを捨てる", "快く許し，仲直りする", "兄弟姉妹の良いところを"], ["エホバに許してもらうにはどうする必要がある？", "エホバはどのように長老たちによって助けてくれる？", "エホバは罪を犯した人に", "悔い改めるなら"], ["どんな人たちが私たちをエホバから引き離そうとするかもしれない？", "自分のせいでエホバから離れてしまいかねない，どんな危険がある？", "間違ったことを", "兄弟姉妹が罪を犯した時も神に従う", "大いなるバビロンから離れている"], ["迫害を受けるのはどうして？", "迫害に備えてどんなことをするといい？", "迫害に耐えるとどんな良いことがある？", "家族に反対されても耐えられる", "迫害されても", "耐えられるようにエホバが助けてくれる"], ["エホバとの友情を深めていく必要があるのはどうして？", "ほかにもどんなことをしたらいい？", "エホバはどのように成長を助けてくれる？", "クリスチャンとしての目標を持つ", "いつまでも幸せに暮らしましょう!", "重大な罪を犯してしまったら，エホバに助けてもら"]];
+const LFP=["聖書はどのように役立つか。聖書は誰からのメッセージで，どうすればその方について知ることができるか。","どんな崇拝が神に喜ばれるか。神は私たちのために何をしてくれたか。","神は自分を崇拝する人たちにどんなことを期待しているか。","どうすれば神にずっと愛される人になれるか。"];
+const BOOK='いつまでも幸せに暮らせます 楽しく学べる聖書レッスン';
+const lffSec=n=>n<=12?1:n<=33?2:n<=47?3:4;
+const lffTitle=n=>{const x=LFF[n-1];return x?(x[1]?x[1]+' ('+x[0]+')':x[0]):''};
+const STYLE=()=>`Speaking style for ${TN()}: model her Japanese on the register of the Japanese Bible-study book 「${BOOK}」 published by Jehovah's Witnesses: gentle, warm, respectful plain-polite です・ます; short, clear sentences with one idea each; everyday words rather than difficult ones; questions that invite the listener to think (〜と思いますか。どうしてでしょうか。考えてみましょう。); kind invitations with 〜しましょう／〜てみてください; a brief summary of the main point. Never pushy, sarcastic or slangy (except inside anime/drama scenes or units about casual speech, which are about other characters' speech).`;
+const THINK=`Help the learner THINK in Japanese: prefer explaining Japanese with simple Japanese the learner already knows (やさしい日本語), connect new words to known ones, and ask questions answered in Japanese.`;
+const KROWS=[['a','あいうえお','a i u e o'],['k','かきくけこ','ka ki ku ke ko'],['s','さしすせそ','sa shi su se so'],['t','たちつてと','ta chi tsu te to'],['n','なにぬねの','na ni nu ne no'],['h','はひふへほ','ha hi fu he ho'],['m','まみむめも','ma mi mu me mo'],['y','や・ゆ・よ','ya - yu - yo'],['r','らりるれろ','ra ri ru re ro'],['w','わ・・・を','wa - - - wo'],['nn','ん','n'],['g','がぎぐげご','ga gi gu ge go'],['z','ざじずぜぞ','za ji zu ze zo'],['d','だぢづでど','da ji zu de do'],['b','ばびぶべぼ','ba bi bu be bo'],['p','ぱぴぷぺぽ','pa pi pu pe po']];
+const ROWS=KROWS.map(([id,c,r])=>{const cs=[...c],rs=r.split(' ');return{id,cells:cs.map((ch,i)=>ch==='・'?null:{h:ch,r:rs[i]})}});
+const ALLK=ROWS.flatMap(r=>r.cells.filter(Boolean).map(c=>({...c,row:r.id})));
+const ROWLAB=id=>ROWS.find(r=>r.id===id).cells.find(Boolean).h;
+const WORDS_H=[['ねこ','neko','cat'],['いぬ','inu','dog'],['あか','aka','red'],['あお','ao','blue'],['いえ','ie','house'],['かお','kao','face'],['すし','sushi','sushi'],['ここ','koko','here'],['たかい','takai','expensive'],['やすい','yasui','cheap'],['みず','mizu','water'],['おかね','okane','money'],['なまえ','namae','name'],['はな','hana','flower'],['ひと','hito','person'],['くるま','kuruma','car'],['あさ','asa','morning'],['よる','yoru','night'],['みせ','mise','shop'],['かいもの','kaimono','shopping'],['ありがとう','arigatou','thank you'],['すみません','sumimasen','excuse me'],['こんにちは','konnichiwa','hello'],['ください','kudasai','please give me'],['いくら','ikura','how much'],['えき','eki','station'],['たべる','taberu','to eat'],['のむ','nomu','to drink']];
+const WORDS_K=[['コーヒー','koohii','coffee'],['パン','pan','bread'],['テレビ','terebi','TV'],['カメラ','kamera','camera'],['タクシー','takushii','taxi'],['ホテル','hoteru','hotel'],['レストラン','resutoran','restaurant'],['ジュース','juusu','juice'],['ケーキ','keeki','cake'],['アイス','aisu','ice cream'],['メニュー','menyuu','menu'],['レジ','reji','register'],['サイズ','saizu','size'],['シャツ','shatsu','shirt'],['バス','basu','bus'],['トイレ','toire','restroom'],['ビール','biiru','beer'],['パソコン','pasokon','computer'],['カード','kaado','card'],['アニメ','anime','anime'],['ニュース','nyuusu','news'],['ドラマ','dorama','drama']];
+
+/* ================= state & storage ================= */
+const LSP='hanaso2:';
+const freshSet=()=>({tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
+const fresh=()=>({v:2,updated:0,xp:0,done:{},unitPass:{},levelPass:{},attempts:{},topic:'unit',hist:{},kana:{},kanaOK:{h:0,k:0},kanaRows:['a','k'],script:'h',stats:{msgs:0,jp:0},days:[],buckets:['talk'],open:'n5',bibleLesson:0,set:freshSet()});
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(LSP+k)||'null')}catch(e){return null}};
+function lsSet(k,v){const s=JSON.stringify(v);try{localStorage.setItem(LSP+k,s)}catch(e){try{const cur=curUnit().id;Object.keys(localStorage).filter(x=>x.startsWith(LSP+'lesson-')&&!x.includes(cur)).forEach(x=>localStorage.removeItem(x));localStorage.setItem(LSP+k,s)}catch(e2){}}}
+let S=fresh(),ITEMS={},ITEMSU={},LESS={};
+(function load(){
+ const l=lsGet('state2');
+ if(l&&l.v===2)S=Object.assign(fresh(),l,{set:Object.assign(freshSet(),l.set||{})});
+ else{try{const o=JSON.parse(localStorage.getItem('hanaso-v1')||'null');if(o&&o.v===1){S.set=Object.assign(freshSet(),o.set||{},{lock:0});S.kana=o.kana||{};S.hist=o.hist||{};S.stats=o.stats||S.stats;S.days=o.days||[];
+  ITEMS.talk=(o.vocab||[]).map(v=>({t:'w',jp:v.jp,reading:v.reading||'',romaji:v.romaji||'',en:v.en||'',box:v.box||0,due:v.due||Date.now()}))}}catch(e){}}
+ for(const b of S.buckets){const d=lsGet('items-'+b);if(d){ITEMS[b]=d.items||[];ITEMSU[b]=d.updated||0}}
+ if(!ITEMS.talk)ITEMS.talk=[['こんにちは','konnichiwa','hello'],['ありがとうございます','arigatou gozaimasu','thank you (polite)'],['すみません','sumimasen','excuse me / sorry'],['お願{ねが}いします','onegai shimasu','please']].map(([jp,ro,en])=>({t:'w',jp,reading:reading(jp),romaji:ro,en,box:0,due:Date.now()}));
+})();
+let COL=null,SYNC='browser';const WR={};
+function put(id,data,delay=1500){lsSet(id,data);const w=WR[id]=WR[id]||{};w.data=data;w.dirty=true;clearTimeout(w.t);w.t=setTimeout(()=>flushDoc(id),delay)}
+async function flushDoc(id){const w=WR[id];if(!COL||!w||w.saving||!w.dirty)return;w.saving=true;w.dirty=false;
+ try{await COL.doc(id).set(clone(w.data));SYNC='account'}catch(e){const c=e&&e.code;if(['invalid_argument','revoked','not_granted','capability_disabled'].includes(c))COL=null;else if(c==='quota_exceeded'){toast('Cloud storage is full; progress is kept on this device.')}else w.dirty=true}
+ w.saving=false;if(w.dirty)w.t=setTimeout(()=>flushDoc(id),4000)}
+function save(){S.updated=Date.now();put('state2',S)}
+function saveBucket(b){ITEMSU[b]=Date.now();if(!S.buckets.includes(b)){S.buckets.push(b);save()}put('items-'+b,{kind:'items',b,updated:ITEMSU[b],items:ITEMS[b]||[]})}
+const allItems=()=>Object.values(ITEMS).flat();
+function addItems(b,list){const keys=new Set(allItems().map(x=>x.t+norm(x.jp)));const arr=ITEMS[b]=ITEMS[b]||[];let n=0;
+ for(const it of list){const k=it.t+norm(it.jp);if(!norm(it.jp)||keys.has(k))continue;keys.add(k);arr.push({...it,box:0,due:Date.now()});n++}
+ if(n)saveBucket(b);return n}
+
+/* progress logic */
+const passed=u=>!!(S.unitPass[u.id]!=null||S.levelPass[u.lv.id]!=null);
+const unlocked=u=>u.gi===0||passed(u)||passed(UNITS[u.gi-1]);
+const curUnit=()=>UNITS.find(u=>!passed(u))||UNITS[UNITS.length-1];
+const skey=(u,s)=>u.id+'|'+s.id;
+const stepDone=(u,s)=>S.done[skey(u,s)]!=null;
+const nextStep=u=>stepsOf(u).find(s=>!stepDone(u,s))||stepsOf(u).at(-1);
+const stage=()=>S.set.lock||curUnit().st;
+const ST=()=>STAGES[stage()-1];
+const lvDone=lv=>lv.units.filter(passed).length;
+const showRomaji=()=>S.set.romaji==='on'||(S.set.romaji==='auto'&&stage()<=2);
+const showEnglish=()=>S.set.english==='on'||(S.set.english==='auto'&&stage()<=2);
+function markDay(){const d=today();if(!S.days.includes(d)){S.days.push(d);S.days=S.days.slice(-90)}}
+function streak(){let n=0,d=new Date();for(;;){const k=d.toISOString().slice(0,10);if(S.days.includes(k)){n++;d=new Date(d-DAY)}else if(n===0&&k===today()){d=new Date(d-DAY)}else break}return n}
+function gain(x){S.xp+=x;markDay()}
+function stepLabel(s){return{words:`Words & kanji ${s.i+1}`,grammar:`Grammar: ${(s.pts||[]).join(' · ')}`,listen:`Listening scene ${s.i+1}`,study:`Bible lesson ${String(s.n).padStart(2,'0')}: ${LFF[s.n-1]?LFF[s.n-1][1]||LFF[s.n-1][0]:''}`,talk:'Conversation practice',test:'Unit test',klearn:'Learn the chart & trace',kprac:'Practice reading & writing',ktest:'Kana test'}[s.type]}
+function stepSub(s,u){const lv=u.lv;switch(s.type){
+ case 'words':{const ks=lv.id==='n5'?kanjiForSet(u,s.i):[];return `${lv.wc} words${ks.length?' · kanji '+ks.join(' '):lv.kc?' · '+lv.kc+' kanji':''}`}
+ case 'grammar':return 'Patterns, examples, drill';
+ case 'listen':return `${lv.genres[s.i%lv.genres.length]} · comprehension questions`;
+ case 'study':return `${u.li<=2?'Simplified to '+lv.name+' level':'Full register'} · listen, answer, review in Japanese`;
+ case 'talk':return `Chat with ${TN()} using this unit (5 replies)`;
+ case 'test':return '10 questions · pass with 8';
+ case 'klearn':return 'Tap letters to hear them, trace them';
+ case 'kprac':return `Read and write quizzes · ${Math.min(40,S.kanaOK[u.kana]||0)}/40 correct`;
+ case 'ktest':return '20 letters · pass with 17'}return ''}
+function markStep(u,s,score){const k=skey(u,s);S.done[k]=Math.max(S.done[k]||0,score);save()}
+
+const TN=()=>S.set.tutor||'Yuki';
+const TNJ=()=>S.set.tutorJa||'ゆき';
+/* ================= AI provider (bring your own key) ================= */
+let SAMPLE=null,TTS=null,DICT=null,capsReady=true;
+const AIK='hanaso-ai';
+const PROV={anthropic:{name:'Anthropic (Claude)',keyUrl:'https://console.anthropic.com/settings/keys'},openai:{name:'OpenAI (ChatGPT)',keyUrl:'https://platform.openai.com/api-keys'},gemini:{name:'Google Gemini',keyUrl:'https://aistudio.google.com/apikey'},openrouter:{name:'OpenRouter (many models)',keyUrl:'https://openrouter.ai/keys'},custom:{name:'Other OpenAI-compatible server',keyUrl:''}};
+let AI=(()=>{try{return JSON.parse(localStorage.getItem(AIK)||'null')||{}}catch(e){return{}}})();
+AI=Object.assign({provider:'anthropic',key:'',base:'',smart:'',fast:'',models:[]},AI);
+const saveAI=()=>{try{localStorage.setItem(AIK,JSON.stringify(AI))}catch(e){}};
+const aiReady=()=>!!(AI.smart&&(AI.key||AI.provider==='custom')&&(AI.provider!=='custom'||AI.base));
+const oaBase=()=>AI.provider==='openai'?'https://api.openai.com/v1':AI.provider==='openrouter'?'https://openrouter.ai/api/v1':(AI.base||'').replace(/\/+$/,'');
+function aiErr(status,body){const m=(body&&(body.error&&(body.error.message||body.error)||body.message))||'';
+ if(status===401||status===403)return{code:'bad_key',message:String(m)};if(status===429)return{code:'rate_limited',message:String(m)};if(status===404)return{code:'bad_model',message:String(m)};if(status===400)return{code:'bad_request',message:String(m)};return{code:'upstream_error',message:String(m)||('HTTP '+status)}}
+async function aiFetch(url,init,ms){const ctl=new AbortController();const t=setTimeout(()=>ctl.abort(),ms||150000);
+ try{const r=await fetch(url,{...init,signal:ctl.signal});let b=null;try{b=await r.json()}catch(e){}if(!r.ok)throw aiErr(r.status,b);return b}
+ catch(e){if(e&&e.code)throw e;throw{code:'network',message:String(e&&e.message||e)}}finally{clearTimeout(t)}}
+const anthHeaders=()=>({'content-type':'application/json','x-api-key':AI.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'});
+const oaHeaders=()=>{const h={'content-type':'application/json'};if(AI.key)h.authorization='Bearer '+AI.key;if(AI.provider==='openrouter'){h['HTTP-Referer']=location.origin;h['X-Title']='Hanaso'}return h};
+async function aiText(prompt,tier){const model=tier==='fast'&&AI.fast?AI.fast:AI.smart;const big=tier!=='fast';
+ if(AI.provider==='anthropic'){const b=await aiFetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:anthHeaders(),body:JSON.stringify({model,max_tokens:big?8000:2000,messages:[{role:'user',content:prompt}]})});return(b.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('')}
+ if(AI.provider==='gemini'){const b=await aiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(AI.key)}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',maxOutputTokens:big?8192:2048}})});
+  return((b.candidates||[])[0]?.content?.parts||[]).map(x=>x.text||'').join('')}
+ const b=await aiFetch(oaBase()+'/chat/completions',{method:'POST',headers:oaHeaders(),body:JSON.stringify({model,messages:[{role:'user',content:prompt}]})});
+ const c=(b.choices||[])[0];return c&&c.message?(typeof c.message.content==='string'?c.message.content:(c.message.content||[]).map(x=>x.text||'').join('')):''}
+function parseJSON(t){t=String(t||'').trim();const f=t.match(/```(?:json)?\s*([\s\S]*?)```/);if(f)t=f[1].trim();try{return JSON.parse(t)}catch(e){}
+ const a=Math.min(...['{','['].map(c=>{const i=t.indexOf(c);return i<0?1e9:i})),z=Math.max(t.lastIndexOf('}'),t.lastIndexOf(']'));if(a<z){try{return JSON.parse(t.slice(a,z+1))}catch(e){}}throw{code:'invalid_json'}}
+async function aiJSON(prompt,tier){const t=await aiText(prompt+'\n\nReturn only the JSON, with no other text.',tier);if(!t.trim())throw{code:'empty'};return parseJSON(t)}
+async function listModels(){
+ if(AI.provider==='anthropic'){const b=await aiFetch('https://api.anthropic.com/v1/models?limit=100',{headers:anthHeaders()},30000);return(b.data||[]).map(m=>m.id)}
+ if(AI.provider==='gemini'){const b=await aiFetch(`https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=${encodeURIComponent(AI.key)}`,{},30000);return(b.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace(/^models\//,''))}
+ const b=await aiFetch(oaBase()+'/models',{headers:oaHeaders()},30000);let ids=(b.data||[]).map(m=>m.id);
+ if(AI.provider==='openai')ids=ids.filter(i=>/^(gpt|o\d|chatgpt)/i.test(i)&&!/audio|realtime|transcribe|tts|image|search|embedding|instruct/i.test(i));return ids}
+function guessModels(ids){const pick=(re,not)=>ids.find(i=>re.test(i)&&!(not&&not.test(i)));
+ const fast=pick(/haiku|flash|mini|small|fast/i,/lite-preview|thinking|8b/i)||ids[0]||'';
+ const smart=pick(/sonnet/i)||pick(/pro/i,/vision/i)||pick(/^gpt-\d/i,/mini|nano/i)||pick(/opus/i)||fast;return{smart,fast}}
+function refreshAI(){SAMPLE=aiReady()?{json:(p,o)=>aiJSON(p,o&&o.modelTier==='quick'?'fast':'smart')}:null;
+ const n=$('#notice');if(n)n.innerHTML=SAMPLE?'':`<div class="notice">Lessons and conversation need an AI. <button class="mini" data-goai="1">Set up your AI</button> Kana practice and review work without one.</div>`}
+document.addEventListener('click',e=>{if(e.target.closest('[data-goai]')){go('me');setTimeout(()=>{const a=$('#aibox');a&&a.scrollIntoView({block:'start'})},50)}});
+function makeDict(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;let rec=null,cP=()=>{},cF=()=>{},cS=()=>{};
+ return{onPartial:f=>{cP=f},onFinal:f=>{cF=f},onState:f=>{cS=f},
+  start(){try{rec=new SR();rec.lang='ja-JP';rec.interimResults=true;rec.continuous=false;
+   rec.onresult=e=>{let fin='',int='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)fin+=r[0].transcript;else int+=r[0].transcript}if(fin)cF({text:fin});else cP({text:int})};
+   rec.onend=()=>cS({state:'idle'});rec.onerror=ev=>{cS({state:'idle'});if(ev&&ev.error==='not-allowed')$('#mic').hidden=true};rec.start();cS({state:'listening'});return Promise.resolve()}catch(e){return Promise.reject({code:'failed'})}},
+  stop(){try{rec&&rec.stop()}catch(e){}return Promise.resolve()}}}
+
+/* ================= speech ================= */
+const FEM=/kyoko|o-ren|nanami|ayumi|haruka|mizuki|sayaka|shiori|aoi|mayu|nanako|female|女性|google 日本語/i;
+const MALE=/otoya|hattori|ichiro|keita|daichi|naoki|\bmale\b|男性/i;
+const ENF=/samantha|zira|aria|jenny|karen|moira|tessa|serena|victoria|allison|ava|susan|female|google us english/i;
+const voices=()=>{try{return speechSynthesis.getVoices()||[]}catch(e){return[]}};
+const jaVoices=()=>voices().filter(v=>/^ja/i.test(v.lang));
+function jaVoice(){const vs=jaVoices();return vs.find(v=>v.voiceURI===S.set.voice)||vs.find(v=>FEM.test(v.name))||vs.find(v=>!MALE.test(v.name))||vs[0]||null}
+const jaMale=()=>jaVoices().find(v=>MALE.test(v.name)&&!FEM.test(v.name))||null;
+function enVoice(){const vs=voices().filter(v=>/^en/i.test(v.lang));return vs.find(v=>ENF.test(v.name))||vs.find(v=>!MALE.test(v.name))||vs[0]||null}
+function stopSpeak(){try{speechSynthesis.cancel()}catch(e){}try{TTS&&TTS.stop()}catch(e){}}
+function speak(items){
+ items=items.filter(i=>i.text&&i.text.trim());if(!items.length)return;stopSpeak();
+ const fv=jaVoice(),mv=jaMale();
+ if('speechSynthesis' in window&&(fv||!TTS)){
+  items.forEach(it=>{const u=new SpeechSynthesisUtterance(it.text);const ja=it.lang!=='en';u.lang=ja?'ja-JP':'en-US';let v=ja?fv:enVoice(),p=1.08;
+   if(ja&&it.g==='m'){if(mv){v=mv;p=1}else p=.7}if(v)u.voice=v;u.pitch=p;u.rate=Math.max(.5,Math.min(1.6,(it.rate||S.set.rate)*(ja?1:1.05)));try{speechSynthesis.speak(u)}catch(e){}});
+  return}
+ if(TTS)TTS.speak(items.map(it=>({text:it.text,voice:it.g==='m'?'rounded':'airy',rate:Math.max(.7,Math.min(1.5,it.rate||S.set.rate)),language:it.lang==='en'?'en':'ja'}))).catch(()=>{});
+}
+const sayJa=t=>speak([{lang:'ja',text:plain(t)}]);
+let unlockedAudio=false;
+document.addEventListener('pointerdown',()=>{if(unlockedAudio)return;unlockedAudio=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}},{capture:true});
+try{speechSynthesis.onvoiceschanged=()=>{if(view==='me')renderMe()}}catch(e){}
+
+/* ================= header & views ================= */
+function renderHead(){const u=curUnit(),st=ST();$('#brandsub').textContent='Hanasō with '+TN();$('#sealch').textContent=[...TNJ()][0]||'ゆ';
+ $('#lvchip').textContent=`${u.lv.name} · ${u.kana?u.t:'Unit '+u.num}`;$('#mfill').style.width=st.mix+'%';$('#mtext').textContent=st.mix+'% 日本語';
+ document.body.classList.toggle('hide-furi',!S.set.furi)}
+let view='path';
+function go(v){view=v;stopSpeak();
+ document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v||(v==='lesson'&&x.dataset.v==='path')));
+ document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id===v));
+ if(v==='path')renderPath();if(v==='talk'){renderTopics();renderLog()}if(v==='review')renderReview();if(v==='me')renderMe();if(v==='lesson')renderLesson();
+ const el=$('#'+v);if(el&&v!=='talk')el.scrollTop=0}
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){if(b.dataset.v==='path')PSEL=null;go(b.dataset.v)}});
+
+/* ================= path ================= */
+let PSEL=null;
+function dueItems(){const n=Date.now();return allItems().filter(v=>(v.due||0)<=n)}
+function renderPath(){
+ const el=$('#path');
+ if(PSEL)return renderUnit(el,UBYID[PSEL]);
+ const u=curUnit(),s=nextStep(u),due=Math.min(20,dueItems().length);
+ const allDone=UNITS.every(passed);
+ let h=`<div class="today"><div class="qstat" style="color:#c9d4f0"><span>Today · about 15–20 minutes</span><span>${streak()} day streak</span></div>
+ <h3>${allDone?'You have finished the course. おめでとう!':`${esc(u.lv.name)} · ${esc(u.kana?u.t:'Unit '+u.num+': '+u.t)}`}</h3><p class="sub">${esc(u.jp||'')}</p>
+ <ol class="plan">${due?`<li><b>1</b><span>Review ${due} card${due>1?'s':''} <small style="opacity:.7">(~${Math.max(2,Math.round(due/3))} min)</small></span></li>`:''}${allDone?'':`<li><b>${due?2:1}</b><span>${esc(stepLabel(s))}</span></li>`}</ol>
+ <div class="row">${due?`<button class="btn" data-act="rev">Review ${due}</button>`:''}${allDone?'':`<button class="btn ${due?'alt':''}" data-act="next">${due?'Then: ':'Start: '}${esc(stepLabel(s).split(':')[0])}</button>`}<button class="btn alt" data-u="${u.id}">Unit</button></div></div>`;
+ if(!aiReady())h+=`<div class="notice" style="margin:0 0 14px">Kana and review work now. Lessons and conversation need your own AI. <button class="mini" data-goai="1">Set up your AI ›</button></div>`;
+ h+=LVS.map(lv=>{const d=lvDone(lv),tot=lv.units.length,isCur=lv===u.lv,pass=S.levelPass[lv.id]!=null||d===tot;
+  const open=S.open===lv.id;
+  const first=lv.units[0];
+  let x=`<section class="lvl ${isCur?'cur':''} ${pass?'pass':''}"><button class="lh" data-open="${lv.id}"><div class="badge">${lv.name}</div><div class="w"><b>${esc(lv.title)}</b><small>${d}/${tot} units · ~${lv.kanji} kanji · ~${lv.words} words</small><div class="bar ${pass?'ok':''}"><i style="width:${d/tot*100}%"></i></div></div><span aria-hidden="true">${open?'▾':'▸'}</span></button>`;
+  if(open){x+=`<div class="ulist">${lv.units.map(un=>{const p=passed(un),c=un===u,lk=!unlocked(un);const st=stepsOf(un),dn=st.filter(s=>stepDone(un,s)).length;
+    return `<button class="urow" data-u="${un.id}" ${lk?'disabled':''}><span class="ust ${p?'done':c?'cur':''}">${p?'✓':lk?'·':un.num||'あ'}</span><div class="w"><b>${esc(un.t)}</b><small>${esc(un.jp)} · ${p?'passed'+(S.unitPass[un.id]!=null?' '+S.unitPass[un.id]+'%':''):lk?'locked':`${dn}/${st.length} steps`}</small></div></button>`}).join('')}
+   <button class="urow" data-exam="${lv.id}" ${unlocked(first)?'':'disabled'}><span class="ust ${S.levelPass[lv.id]!=null?'done':''}">${S.levelPass[lv.id]!=null?'✓':'試'}</span><div class="w"><b>${lv.name} level exam</b><small>${S.levelPass[lv.id]!=null?'passed '+S.levelPass[lv.id]+'%':d===tot?'20 questions · pass with 70%':'Already know this level? Pass to test out'}</small></div></button></div>`}
+  return x+'</section>'}).join('');
+ h+=`<p class="foot">Each step is one 15–20 minute session. Units unlock in order; pass a unit test to move on, and pass a level exam to finish a level or test out of it.</p>`;
+ el.innerHTML=h}
+function renderUnit(el,u){
+ const st=stepsOf(u),nx=nextStep(u);
+ el.innerHTML=`<button class="back" data-act="pback">‹ All levels</button><div class="pill">${u.lv.name}${u.num?' · Unit '+u.num:''}</div><h2 class="t" style="margin-top:8px">${esc(u.t)}</h2><p class="sub">${esc(u.jp)} · ${esc(u.th)}</p>
+ ${u.g.length?`<div class="gl">${u.g.map(g=>`<span class="pill red">${esc(g)}</span>`).join('')}</div>`:''}
+ <ol class="steps">${st.map(s=>{const d=stepDone(u,s),sc=S.done[skey(u,s)];return `<li><button data-step="${s.id}"><span class="ust ${d?'done':s===nx?'cur':''}">${d?'✓':s.type==='test'||s.type==='ktest'?'試':s.type==='talk'?'話':s.type==='listen'?'聴':s.type==='grammar'?'文':'字'}</span><div class="w"><b>${esc(stepLabel(s))}</b><small>${esc(stepSub(s,u))}${d&&sc!=null&&s.type!=='klearn'&&s.type!=='talk'?` · ${sc}%`:''}</small></div><span aria-hidden="true">›</span></button></li>`}).join('')}</ol>
+ ${passed(u)?'<p class="pill ok">Unit passed</p>':'<p class="foot">You can take the unit test any time to test out.</p>'}`}
+$('#path').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.act==='rev'){REVTAB='items';go('review');startReview();return}
+ if(t.dataset.act==='next'){const u=curUnit();openStep(u,nextStep(u));return}
+ if(t.dataset.act==='pback'){PSEL=null;return renderPath()}
+ if(t.dataset.open){S.open=S.open===t.dataset.open?'':t.dataset.open;save();return renderPath()}
+ if(t.dataset.u){PSEL=t.dataset.u;renderPath();$('#path').scrollTop=0;return}
+ if(t.dataset.step){const u=UBYID[PSEL];openStep(u,stepsOf(u).find(s=>s.id===t.dataset.step));return}
+ if(t.dataset.exam)openExam(LVS.find(l=>l.id===t.dataset.exam));});
+
+/* ================= lesson engine ================= */
+let LZ=null,QZ=null;
+const HEAD=`You write lessons for Hanasō, a Japanese course app that takes an English-speaking adult from zero to JLPT N1, with the goal of understanding anime, J-dramas and TV news. In all Japanese text, every kanji run is followed by its reading in braces, like 食{た}べる or 日本語{にほんご}; never use braces for anything else. Reply with ONLY one JSON object.`;
+const HEADS=()=>HEAD+'\n'+STYLE()+'\n'+THINK;
+function knownWords(lv){return UNITS.filter(u=>u.lv===lv).flatMap(u=>(ITEMS[u.id]||[]).filter(x=>x.t==='w').map(x=>plain(x.jp))).slice(-2500).join('、')}
+const learnedKanji=()=>allItems().filter(x=>x.t==='k').map(x=>x.jp).join('');
+function promptFor(u,s,attempt){const lv=u.lv;
+ if(s.type==='words'){const HEAD=HEADS();const ks=kanjiForSet(u,s.i);
+  const kl=lv.kc?`Also teach ${lv.kc} NEW JLPT ${lv.name} kanji that appear in your words and are NOT in this list of kanji already learned: ${learnedKanji()||'(none)'}.`:ks.length?`Kanji cards for this set: teach exactly these kanji: ${ks.join(' ')}.`:'This set has no kanji cards ("kanji": []).';
+  return `${HEAD}
+Level: JLPT ${lv.name}. Unit ${u.num}: "${u.t}" (theme: ${u.th}). Unit grammar: ${u.g.join('; ')}.
+This is word set ${s.i+1} of ${lv.sets} for the unit. Teach exactly ${lv.wc} NEW words from the JLPT ${lv.name} vocabulary that fit the theme; across the sets, cover the theme broadly and favor high-frequency words heard in daily life, anime, dramas${u.li>=2?' and news':''}.
+${kl}
+Do not repeat words the learner already knows: ${knownWords(lv)||'(none)'}.
+Shape: {"kanji":[{"k":"食","meaning":"eat; food","on":["ショク"],"kun":["た(べる)"],"examples":[{"jp":"食{しょく}事{じ}","en":"meal"}]}],"words":[{"jp":"朝{あさ}ご飯{はん}","reading":"あさごはん","romaji":"asagohan","en":"breakfast","def":"朝{あさ}に食{た}べるご飯{はん}。","ex":"毎朝{まいあさ}朝{あさ}ご飯{はん}を食{た}べます。","exEn":"I eat breakfast every morning."}]}
+"def": ${u.li===0?'a very short Japanese definition using only basic words, or "" if impossible at this level':'a simple Japanese definition (やさしい日本語) using only words at or below JLPT '+lv.name}. Where natural, some example sentences may use the gentle explanatory tone described above.
+Rules: on readings in katakana, kun readings in hiragana with okurigana in parentheses; 1–2 example words per kanji; example sentences short, natural, and using grammar up to JLPT ${lv.name}; Hepburn romaji.`}
+ if(s.type==='grammar')return `${HEADS()}
+Level: JLPT ${lv.name}. Unit "${u.t}" (theme: ${u.th}). Teach these grammar points: ${s.pts.join('; ')}.
+For each point: pattern, meaning, how to form it, and notes ${u.li<=1?'in clear, friendly English (add one short やさしい日本語 sentence restating the meaning, inside the notes)':'in simple Japanese with an English translation in "notesEn"'} covering nuance, register and common mistakes${u.li>=2?', plus how it sounds in anime, dramas or news if relevant':''}. Give 3 short, natural examples per point on the unit theme${u.li<=1?' with romaji':''}.
+Then write 6 multiple-choice drill questions like JLPT 文法 questions (fill the blank ＿＿ or pick the natural sentence), 4 choices each.
+Shape: {"points":[{"pattern":"～てください","meaning":"please do ~","form":"Verb て-form + ください","notes":"...","notesEn":"","examples":[{"jp":"窓{まど}を開{あ}けてください。","romaji":"mado o akete kudasai.","en":"Please open the window."}]}],"drill":[{"q":"窓{まど}を＿＿ください。","en":"Please open the window.","choices":["開{あ}けて","開{あ}ける","開{あ}けた","開{あ}けない"],"answer":0,"why":"short reason in English"}]}`;
+ if(s.type==='listen'){const genre=lv.genres[s.i%lv.genres.length];
+  return `${HEAD}
+Write an ORIGINAL ${genre} scene for listening practice at JLPT ${lv.name}, in unit "${u.t}" (theme: ${u.th}), naturally using this grammar: ${u.g.join('; ')}. Length: ${lv.len}. Make it sound like real ${genre} speech at this level${u.li>=3?' — natural register, contractions and pace':''}. Original characters only: never existing anime, shows, brands or real people. A news report uses an anchor and optionally a reporter or interviewee.
+Then 4 comprehension questions ${lv.qlang}, 4 choices each, answerable only by listening.
+Shape: {"title":"...","genre":"${genre}","setting":"one-line English description of the scene","cast":[{"name":"ハルト","gender":"m"},{"name":"ミク","gender":"f"}],"lines":[{"who":"ハルト","jp":"...","romaji":"...","en":"..."}],"questions":[{"q":"...","choices":["","","",""],"answer":0}],"vocab":[{"jp":"","reading":"","romaji":"","en":""}]}
+"vocab": up to 5 key words from the scene. "gender" is "m" or "f".`}
+ if(s.type==='study'){const n=s.n,full=u.li>=3;
+  return `${HEADS()}\nWrite a Bible-lesson (聖書レッスン) listening scene based on lesson ${String(n).padStart(2,'0')} 「${lffTitle(n)}」 (section ${lffSec(n)}) of the book 「${BOOK}」. The section's focus: ${LFP[lffSec(n)-1]} The lesson's own question headings, in order: ${LFH[n-1].join(' / ')}. Two speakers: ${TNJ()} (the teacher, female) studies the lesson with a student (生徒) — a friendly adult. They follow the lesson's questions and main points as the book teaches them, read Bible verses by reference in the book's way, e.g. （詩編 37:29を読む。）, and briefly explain each verse in their own words.\n${full?'Use the full natural register of the Japanese book (JLPT '+lv.name+' level).':'SIMPLIFY everything to JLPT '+lv.name+' grammar and vocabulary, keeping the same gentle tone.'} Length: ${lv.len}. ${lffText(n)?`Follow the lesson's actual content below (from the learner's own copy), restated at the learner's level${full?'; at this level you may use the book\'s own phrasing':''}:\n<<<${lffText(n).slice(0,4500)}>>>`:'Use original wording; quote at most a short phrase of any Bible verse.'}\nThen 4 comprehension questions ${lv.qlang}, 4 choices each; then 3 復習 review questions in Japanese (ます form, like the book's 復習) with a model answer at this level; and a one-sentence まとめ of the lesson's point.\nShape: {"titleJa":"lesson title in Japanese","title":"...","setting":"one-line English description","cast":[{"name":"${TNJ()}","gender":"f"},{"name":"生徒","gender":"m"}],"lines":[{"who":"${TNJ()}","jp":"...","romaji":"...","en":"..."}],"questions":[{"q":"...","choices":["","","",""],"answer":0}],"review":[{"q":"...","model":"...","en":"English of question and answer"}],"matome":"...","matomeEn":"...","vocab":[{"jp":"","reading":"","romaji":"","en":""}]}\n"vocab": up to 6 key words for discussing this lesson.`}
+ if(s.type==='test'){const it=(ITEMS[u.id]||[]).map(x=>plain(x.jp)).slice(-150).join('、');
+  return `${HEAD}
+Write a 10-question unit test (attempt ${attempt}; vary it from earlier attempts) for JLPT ${lv.name}, unit "${u.t}" (theme: ${u.th}). Test this unit's grammar (${u.g.join('; ')}) and these words and kanji it taught: ${it||'(general JLPT '+lv.name+' vocabulary for the theme)'}.
+Mix like the JLPT: 3 vocabulary or kanji-reading, 4 grammar, 1 short reading passage, 2 listening. For listening, put the Japanese the learner will HEAR in "audio"; the question and choices must not repeat it. Write questions ${u.li<=1?'in English, with the Japanese being tested':'in Japanese, as on the real JLPT'}.
+Shape: {"questions":[{"section":"vocab","passage":"","audio":"","q":"...","choices":["","","",""],"answer":0,"why":"short explanation in English"}]}
+"section" is one of vocab, grammar, reading, listening; "passage" only for reading.`}
+}
+function examPrompt(lv,attempt){return `${HEAD}
+Write a 20-question mock JLPT ${lv.name} exam (attempt ${attempt}; vary it). Cover the level as a whole: ${lv.units.filter(u=>!u.kana).map(u=>u.t+' ('+u.g.join(', ')+')').join('; ')}.
+Sections like the real test: 5 文字・語彙 (kanji readings, vocabulary), 6 文法, 4 読解 (questions on 1–2 short passages, repeat the passage in each of its questions), 5 聴解 (put the Japanese the learner will HEAR in "audio"; the question and choices must not repeat it). Real JLPT ${lv.name} difficulty. Questions ${lv.id==='n5'||lv.id==='n4'?'in English with the Japanese being tested':'in Japanese, as on the real JLPT'}.
+Shape: {"questions":[{"section":"vocab","passage":"","audio":"","q":"...","choices":["","","",""],"answer":0,"why":"short explanation in English"}]}`}
+
+function normQs(arr){return(Array.isArray(arr)?arr:[]).filter(q=>q&&q.q&&Array.isArray(q.choices)&&q.choices.length>=2&&Number.isInteger(+q.answer)&&+q.answer>=0&&+q.answer<q.choices.length).map(q=>{
+ const idx=shuffle(q.choices.map((_,i)=>i));return{kind:'mc',section:String(q.section||''),promptHTML:ruby(String(q.q)),sub:q.en?esc(q.en):'',passage:String(q.passage||''),audio:plain(String(q.audio||'')),choices:idx.map(i=>String(q.choices[i])),answer:idx.indexOf(+q.answer),why:String(q.why||'')}})}
+
+async function generate(prompt){
+ if(!SAMPLE)throw{code:capsReady?'no_sample':'not_ready'};
+ return await SAMPLE.json(prompt,{modelTier:'default',cache:false});
+}
+async function getLesson(u,s,key,prompt){
+ if(LESS[key])return LESS[key];
+ const l=lsGet(key);if(l&&l.c){LESS[key]=l.c;return l.c}
+ if(COL){try{const sn=await COL.doc(key).get();if(sn.exists){const c=clone(sn.data()).c;if(c){LESS[key]=c;lsSet(key,{kind:'lesson',c});return c}}}catch(e){}}
+ const c=await generate(prompt);
+ if(!c||typeof c!=='object')throw{code:'invalid_json'};
+ LESS[key]=c;put(key,{kind:'lesson',c},300);return c}
+const lessonKey=(u,s,a)=>`lesson-${u.id}-${s.id}${a?'-a'+a:''}`;
+const PREF={};
+function prefetch(u){if(!SAMPLE)return;const s=stepsOf(u).find(x=>!stepDone(u,x)&&['words','grammar','listen','study'].includes(x.type));if(!s)return;const k=lessonKey(u,s);if(LESS[k]||PREF[k]||lsGet(k))return;PREF[k]=1;getLesson(u,s,k,promptFor(u,s)).catch(()=>{}).finally(()=>{PREF[k]=0})}
+
+function openStep(u,s){
+ if(!u||!s)return;
+ if(s.type==='klearn'){S.script=u.kana;REVTAB='kana';kmode='chart';markStep(u,s,100);go('review');toast('Tap each letter to hear it. Use Trace to write it.');return}
+ if(s.type==='kprac'){S.script=u.kana;REVTAB='kana';kmode='read';quiz=null;go('review');toast(`Get 40 right in Read or Write to finish this step (${Math.min(40,S.kanaOK[u.kana]||0)}/40).`);return}
+ if(s.type==='talk'){S.topic='unit';save();go('talk');return}
+ LZ={u,s,phase:'loading',i:0};go('lesson');
+ if(s.type==='ktest'){const pool=shuffle(ALLK.filter(k=>k.h!=='ぢ'&&k.h!=='づ')).slice(0,20);
+  const qs=pool.map(k=>{const ch=u.kana==='k'?toKata(k.h):k.h;const others=shuffle([...new Set(ALLK.map(x=>x.r).filter(r=>r!==k.r))]).slice(0,3);const c=shuffle([k.r,...others]);return{kind:'mc',promptHTML:`<span class="kbig">${ch}</span>`,choices:c,answer:c.indexOf(k.r),sayAfter:ch,plainChoices:true}});
+  LZ.phase='quiz';startQuiz(qs,{pass:17,onDone:(r,t)=>finishTest(r,t)});return}
+ loadStep()}
+async function loadStep(regen){const {u,s}=LZ;LZ.phase='loading';LZ.err=null;renderLesson();
+ const a=s.type==='test'?(S.attempts[u.id]||1):0;const key=lessonKey(u,s,a);
+ if(regen){delete LESS[key];try{localStorage.removeItem(LSP+key)}catch(e){}}
+ try{const d=regen?await (async()=>{const c=await generate(promptFor(u,s,a));LESS[key]=c;put(key,{kind:'lesson',c},300);return c})():await getLesson(u,s,key,promptFor(u,s,a));
+  if(LZ.u!==u||LZ.s!==s)return;
+  LZ.data=d;LZ.i=0;
+  if(s.type==='words'){if(!Array.isArray(d.words)||!d.words.length)throw{code:'invalid_json'};LZ.cards=[...(d.kanji||[]).filter(k=>k&&k.k).map(k=>({t:'k',...k})),...d.words.filter(w=>w&&w.jp).map(w=>({t:'w',...w}))];LZ.phase='cards';renderLesson();speakCard()}
+  else if(s.type==='grammar'){if(!Array.isArray(d.points))throw{code:'invalid_json'};LZ.phase='learn';renderLesson()}
+  else if(s.type==='listen'||s.type==='study'){if(!Array.isArray(d.lines)||!d.lines.length)throw{code:'invalid_json'};LZ.phase='listen';const lq=normQs(d.questions);if(!lq.length){LZ.phase='review';LZ.score=100;finishListen();return}startQuiz(lq,{embed:true,onDone:(r,t)=>{LZ.phase='review';LZ.score=Math.round(r/t*100);finishListen()}})}
+  else if(s.type==='test'){const qs=normQs(d.questions).slice(0,10);if(qs.length<5)throw{code:'invalid_json'};LZ.phase='quiz';startQuiz(qs,{pass:Math.ceil(qs.length*.8),onDone:(r,t)=>finishTest(r,t)})}
+ }catch(e){LZ.phase='error';LZ.err=e;renderLesson()}}
+function errText(e){const c=e&&e.code;return c==='no_sample'?'Lessons are written by your AI. Set up your AI provider and key in Progress › Your AI.':c==='bad_key'?'Your AI key was rejected. Check it in Progress › Your AI.':c==='bad_model'?'That AI model wasn’t found. Pick another in Progress › Your AI.':c==='network'?'Couldn’t reach your AI provider. Check your connection.':c==='not_ready'?'Still starting up. Try again in a moment.':c==='rate_limited'?'Too many requests right now. Wait a minute and try again.':c==='session_expired'?'Your Claude session expired. Sign in again.':TN()+' couldn’t prepare this lesson. Try again.'}
+
+function startQuiz(qs,o){QZ={qs,i:0,right:0,answered:false,picked:null,res:[],...o};renderLesson()}
+function quizHTML(){const q=QZ.qs[QZ.i];if(!q)return'';
+ const long=q.choices&&q.choices.some(c=>plain(c).length>10);
+ let h=`<div class="qstat"><span>${q.section?esc(q.section)+' · ':''}${QZ.i+1} / ${QZ.qs.length}</span><span>${QZ.right} correct</span></div>`;
+ if(q.passage)h+=`<div class="passage">${ruby(q.passage)}</div>`;
+ if(q.audio)h+=`<button class="play" data-act="qaudio"><svg><use href="#playi"/></svg><span>Play the audio<small>Listen, then answer. Replay as often as you like.</small></span></button>`;
+ h+=`<div class="qq">${q.promptHTML}</div>${q.sub?`<div class="sub">${q.sub}</div>`:''}`;
+ if(q.kind==='type'){h+=`<input class="ans" id="qin" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="ひらがな" ${QZ.answered?'disabled':''} value="${esc(QZ.typed||'')}">${QZ.answered?'':'<div class="nav2"><button class="btn alt" data-act="qskip">Show me</button><button class="btn" data-act="qcheck">Check</button></div>'}`}
+ else h+=`<div class="opts ${long?'one':''}">${q.choices.map((c,j)=>{let cl='';if(QZ.answered){if(j===q.answer)cl='good';else if(j===QZ.picked)cl='bad'}return `<button class="op ${cl}" data-act="qpick" data-j="${j}" ${QZ.answered?'disabled':''}>${q.plainChoices?esc(c):ruby(c)}</button>`}).join('')}</div>`;
+ if(QZ.answered){const ok=QZ.res[QZ.i];h+=`<div class="fb ${ok?'good':'bad'}">${ok?'正解! Correct':'Not quite'}${q.kind==='type'||!ok?'':''}</div>${q.reveal?`<div class="why" style="color:var(--ink);font-size:17px">${q.reveal}</div>`:''}${q.why?`<div class="why">${esc(q.why)}</div>`:''}<button class="btn wide" data-act="qnext">${QZ.i+1<QZ.qs.length?'Next':'See results'}</button>`}
+ return h}
+function quizAnswer(ok){QZ.answered=true;QZ.res[QZ.i]=ok;if(ok)QZ.right++;const q=QZ.qs[QZ.i];if(q.sayAfter)sayJa(q.sayAfter);renderLesson()}
+function quizNext(){QZ.i++;QZ.answered=false;QZ.picked=null;QZ.typed='';if(QZ.i>=QZ.qs.length){const r=QZ.right,t=QZ.qs.length;QZ.onDone(r,t)}else{renderLesson();const q=QZ.qs[QZ.i];if(q.audio)setTimeout(()=>speakAudio(q.audio),250);const n=$('#qin');n&&n.focus()}}
+function speakAudio(t){speak([{lang:'ja',text:t,rate:(LZ&&LZ.u?LZ.u.lv.rate:1)*S.set.rate/.9}])}
+
+function speakCard(){const c=LZ.cards&&LZ.cards[LZ.i];if(!c)return;sayJa(c.t==='k'?(c.examples&&c.examples[0]?c.examples[0].jp:c.k):c.jp)}
+function cardHTML(c){
+ if(c.t==='k')return `<div class="lcard"><div class="pill red">Kanji</div><span class="kbig">${esc(c.k)}</span><div style="font-size:20px;font-weight:700">${esc(c.meaning)}</div>
+  <div class="rd"><span>On</span><b>${esc((c.on||[]).join('、')||'—')}</b><span>Kun</span><b>${esc((c.kun||[]).join('、')||'—')}</b></div>
+  ${(c.examples||[]).map(x=>`<div class="ex" data-say="${esc(plain(x.jp))}"><div class="jt">${ruby(x.jp)}</div><div class="tr">${esc(x.en)}</div></div>`).join('')}</div>`;
+ return `<div class="lcard"><div class="pill">Word</div><span class="wbig" data-say="${esc(plain(c.jp))}">${ruby(c.jp)}</span>${showRomaji()||LZ.u.li===0?`<div class="rm">${esc(c.romaji||'')}</div>`:''}${c.def&&LZ.u.li>=1?`<div class="ex" data-say="${esc(plain(c.def))}" style="text-align:center"><div class="jt" style="font-size:17px">${ruby(c.def)}</div></div>`:''}<div style="font-size:20px;font-weight:700;margin-top:4px" class="${LZ.u.li>=2&&c.def?'tr blur':''}">${esc(c.en)}</div>
+  ${c.ex?`<div class="ex" data-say="${esc(plain(c.ex))}"><div class="jt">${ruby(c.ex)}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(c.exEn||'')}</div></div>`:''}</div>`}
+function wordsDrill(d){const qs=[];
+ (d.kanji||[]).filter(k=>k&&k.k).forEach(k=>{const acc=[...(k.on||[]),...(k.kun||[])].flatMap(r=>{const h=toHira(String(r)).replace(/[-.]/g,'');return[h.replace(/\(.*?\)|（.*?）/g,''),h.replace(/[()（）]/g,'')]}).filter(Boolean);
+  qs.push({kind:'type',promptHTML:`<span class="kbig">${esc(k.k)}</span>`,sub:'Type one reading of this kanji (on or kun)',accept:acc,reveal:`${esc(k.k)} · ${esc((k.on||[]).join('、'))} ／ ${esc((k.kun||[]).join('、'))} · ${esc(k.meaning)}`})});
+ const ws=(d.words||[]).filter(w=>w&&w.jp);
+ ws.forEach((w,i)=>{if(i%2===0||!hasKanji(w.jp)){const ch=shuffle([w,...shuffle(ws.filter(x=>x!==w)).slice(0,3)]);qs.push({kind:'mc',promptHTML:esc(w.en),sub:'Choose the Japanese',choices:ch.map(x=>x.jp),answer:ch.indexOf(w),sayAfter:w.jp})}
+  else qs.push({kind:'type',promptHTML:`<span class="wbig">${esc(plain(w.jp))}</span>`,sub:`Type the reading (${esc(w.en)})`,accept:[w.reading,reading(w.jp)],reveal:ruby(w.jp)+' · '+esc(w.romaji||''),sayAfter:w.jp})});
+ return shuffle(qs).slice(0,14)}
+function finishWords(r,t){const {u,s,data}=LZ;const pct=Math.round(r/t*100);
+ const items=[...(data.kanji||[]).filter(k=>k&&k.k).map(k=>({t:'k',jp:k.k,reading:[...(k.on||[]),...(k.kun||[])].join('、'),en:k.meaning||'',on:k.on||[],kun:k.kun||[],ex:(k.examples||[]).slice(0,2)})),
+  ...(data.words||[]).filter(w=>w&&w.jp).map(w=>({t:'w',jp:w.jp,reading:w.reading||reading(w.jp),romaji:w.romaji||'',en:w.en||'',def:w.def||'',ex:w.ex||'',exEn:w.exEn||''}))];
+ const n=addItems(u.id,items);markStep(u,s,pct);gain(10+n*2+Math.round(pct/10));LZ.phase='done';LZ.score=pct;LZ.added=n;renderLesson();renderHead();prefetch(u)}
+function finishGrammar(r,t){const {u,s}=LZ;const pct=Math.round(r/t*100);markStep(u,s,pct);gain(10+Math.round(pct/5));LZ.phase='done';LZ.score=pct;renderLesson();prefetch(u)}
+function finishListen(){LZ.rev=(LZ.data.review||[]).filter(r=>r&&r.q);const {u,s,data}=LZ;const pct=LZ.score;const n=addItems(u.id,(data.vocab||[]).filter(v=>v&&v.jp).map(v=>({t:'w',jp:v.jp,reading:v.reading||reading(v.jp),romaji:v.romaji||'',en:v.en||''})));
+ markStep(u,s,pct);gain(10+Math.round(pct/5)+n*2);renderLesson();prefetch(u)}
+function finishTest(r,t){const {u,s}=LZ;const pct=Math.round(r/t*100),ok=r>=QZ.pass;LZ.phase='result';LZ.score=pct;LZ.passed=ok;
+ markStep(u,s,pct);
+ if(ok){const first=S.unitPass[u.id]==null;S.unitPass[u.id]=Math.max(S.unitPass[u.id]||0,pct);if(first){gain(50);const nu=UNITS[u.gi+1];toast(`<b>${esc(u.t)} passed!</b><br>${u===u.lv.units.at(-1)?`Take the ${u.lv.name} exam to finish the level.`:nu?'Next: '+esc(nu.t):''}`)}save();renderHead();const nu=curUnit();if(nu!==u)prefetch(nu)}
+ else{S.attempts[u.id]=(S.attempts[u.id]||1)+(s.type==='test'?1:0);save()}
+ renderLesson()}
+function openExam(lv){const a=S.attempts['exam-'+lv.id]||1;LZ={u:{lv,id:'exam-'+lv.id,t:lv.name+' exam',jp:'模擬試験'},s:{id:'exam',type:'exam'},exam:lv,phase:'loading'};go('lesson');loadExam(lv,a)}
+async function loadExam(lv,a){LZ.phase='loading';LZ.err=null;renderLesson();
+ try{const d=await generate(examPrompt(lv,a));const qs=normQs(d&&d.questions).slice(0,20);if(qs.length<10)throw{code:'invalid_json'};LZ.phase='quiz';
+  startQuiz(qs,{pass:Math.ceil(qs.length*.7),onDone:(r,t)=>{const pct=Math.round(r/t*100),ok=r>=QZ.pass;LZ.phase='result';LZ.score=pct;LZ.passed=ok;
+   if(ok){const first=S.levelPass[lv.id]==null;S.levelPass[lv.id]=Math.max(S.levelPass[lv.id]||0,pct);if(first){gain(200);toast(`<b>${lv.name} complete!</b> 合格おめでとう!`)}}else S.attempts['exam-'+lv.id]=a+1;
+   save();renderHead();renderLesson()}})}
+ catch(e){LZ.phase='error';LZ.err=e;renderLesson()}}
+
+function renderLesson(){const el=$('#lesson');if(!LZ){el.innerHTML='';return}
+ const {u,s}=LZ;
+ let h=`<button class="back" data-act="lback">‹ ${u.lv.name}${u.num?' · Unit '+u.num:''}</button><div class="pill">${esc(stepLabel(s)||'Level exam')}</div>`;
+ if(LZ.phase==='loading')h+=`<div class="loading"><svg class="seal"><use href="#seal"/></svg>${esc(TN())} is preparing your ${s.type==='exam'?'exam':s.type==='test'?'test':'lesson'}…<br><small>This can take up to a minute.</small></div>`;
+ else if(LZ.phase==='error')h+=`<div class="err" style="margin-top:16px">${esc(errText(LZ.err))}</div><div class="nav2"><button class="btn" data-act="retry">Try again</button></div>`;
+ else if(s.type==='words'){
+  if(LZ.phase==='cards'){const c=LZ.cards[LZ.i];h+=`<h2 class="t" style="margin-top:8px">${esc(u.t)}</h2><p class="sub">Card ${LZ.i+1} of ${LZ.cards.length} · tap Japanese to hear it</p>${cardHTML(c)}<div class="dots">${LZ.cards.map((_,i)=>`<i class="${i===LZ.i?'on':''}"></i>`).join('')}</div><div class="nav2"><button class="btn alt" data-act="cprev" ${LZ.i?'':'disabled'}>‹ Back</button><button class="btn" data-act="cnext">${LZ.i+1<LZ.cards.length?'Next ›':'Practice ›'}</button></div>`}
+  else if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">Quick practice</h2>`+quizHTML();
+  else h+=doneHTML(`${LZ.score}% on practice · ${LZ.added} new card${LZ.added===1?'':'s'} added to review`);
+ }else if(s.type==='grammar'){const d=LZ.data;
+  if(LZ.phase==='learn'){h+=`<h2 class="t" style="margin-top:8px">${esc(s.pts.join(' · '))}</h2>`+(d.points||[]).map(p=>`<div class="gpt"><h4>${ruby(p.pattern||'')}</h4><div><b>${esc(p.meaning||'')}</b></div>${p.form?`<div class="form">${ruby(p.form)}</div>`:''}<p style="margin:6px 0">${ruby(p.notes||'')}</p>${p.notesEn?`<p class="tr blur" style="margin:0 0 6px">${esc(p.notesEn)}</p>`:''}${(p.examples||[]).map(x=>`<div class="ex" data-say="${esc(plain(x.jp))}"><div class="jt">${ruby(x.jp)}</div>${x.romaji&&(showRomaji()||u.li<=1)?`<div class="rm">${esc(x.romaji)}</div>`:''}<div class="tr">${esc(x.en||'')}</div></div>`).join('')}</div>`).join('')+`<button class="btn wide" data-act="gdrill">Start the drill ›</button>`}
+  else if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">Grammar drill</h2>`+quizHTML();
+  else h+=doneHTML(`${LZ.score}% on the drill`);
+ }else if(s.type==='listen'||s.type==='study'){const d=LZ.data;const isB=s.type==='study';
+  h+=`<h2 class="t" style="margin-top:8px">${isB?esc(String(s.n).padStart(2,'0'))+' ':''}${ruby(isB?(d.titleJa||d.title||''):(d.title||'Listening'))}</h2><p class="sub"><span class="pill red">${isB?'聖書レッスン':esc(d.genre||'')}</span> ${esc(d.setting||'')}</p>
+  <button class="play" data-act="lplay"><svg><use href="#playi"/></svg><span>Play the scene<small>${(d.cast||[]).map(c=>esc(c.name)).join(' · ')} · speed ${u.lv.rate}×</small></span></button>`;
+  if(LZ.phase==='listen'){h+=`<p class="sub">Listen first, without reading. Replay as often as you need, then answer.</p>`+quizHTML()+`<p style="text-align:center"><button class="mini" data-act="lpeek">Stuck? Show the transcript</button></p>`;if(LZ.peek)h+=transcriptHTML(d)}
+  else h+=`<div class="card" style="text-align:center;margin:12px 0"><div class="score">${LZ.score}%</div><div class="sub" style="margin:0">comprehension</div></div><h3>Transcript</h3><p class="sub">Tap a line to hear it again.</p>`+transcriptHTML(d)+`${isB&&d.matome?`<h3>まとめ</h3><div class="ex" data-say="${esc(plain(d.matome))}"><div class="jt">${ruby(d.matome)}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(d.matomeEn||'')}</div></div>`:''}${isB&&(LZ.rev||[]).length?`<h3>復習: answer in Japanese</h3><p class="sub">Say or type your answer first, then compare with the model.</p>${LZ.rev.map((r,i)=>`<div class="card" style="margin-bottom:10px"><div class="jt" style="font-size:18px" data-say="${esc(plain(r.q))}">${ruby(r.q)}</div><textarea class="search" style="margin:8px 0;min-height:70px" lang="ja" data-rv="${i}" placeholder="日本語で答えてみましょう">${esc(r.mine||'')}</textarea>${r.show?`<div class="ex" data-say="${esc(plain(r.model))}"><div class="jt">${ruby(r.model||'')}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(r.en||'')}</div></div>`:`<button class="btn alt" data-act="rvshow" data-i="${i}">Show model answer</button>`}</div>`).join('')}<button class="btn blue wide" data-act="teachit">Practice teaching this lesson to ${esc(TN())} ›</button>`:''}${(d.vocab||[]).length?`<h3>Key words (added to review)</h3><div class="vocab">${d.vocab.map(v=>`<span class="vc">${ruby(v.jp)} · ${esc(v.en)}</span>`).join('')}</div>`:''}<div class="nav2"><button class="btn alt" data-act="lback">Back to unit</button><button class="btn" data-act="nextstep">Next step ›</button></div>`;
+ }else if(s.type==='test'||s.type==='ktest'||s.type==='exam'){
+  if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">${s.type==='exam'?esc(LZ.exam.name)+' mock exam':s.type==='ktest'?esc(u.t)+' test':'Unit test: '+esc(u.t)}</h2><p class="sub">Pass mark ${QZ.pass} of ${QZ.qs.length}</p>`+quizHTML();
+  else{const miss=QZ.qs.map((q,i)=>({q,ok:QZ.res[i]})).filter(x=>!x.ok);
+   h+=`<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px;${LZ.passed?'':'filter:grayscale(1);opacity:.4'}"><use href="#seal"/></svg><div class="score">${LZ.score}%</div><div style="font-weight:700">${LZ.passed?(s.type==='exam'?'合格! Level passed':'Passed!'):'Not yet. Review and try again'}</div></div>`;
+   if(miss.length)h+=`<h3>Review your misses</h3>`+miss.map(({q})=>`<div class="miss">${q.passage?`<div class="tr">${ruby(q.passage).slice(0,400)}</div>`:''}${q.audio?`<div class="tr">Audio: ${esc(q.audio)}</div>`:''}<div>${q.promptHTML}</div><div><b style="color:var(--ok)">${q.plainChoices?esc(q.choices[q.answer]):ruby(q.choices[q.answer])}</b></div>${q.why?`<div class="why">${esc(q.why)}</div>`:''}</div>`).join('');
+   h+=`<div class="nav2">${LZ.passed?`<button class="btn" data-act="${s.type==='exam'?'lback':'nextunit'}">${s.type==='exam'?'Back to path':'Next unit ›'}</button>`:`<button class="btn alt" data-act="lback">Back</button><button class="btn" data-act="retake">Retake</button>`}</div>`}
+ }
+ el.innerHTML=h}
+function doneHTML(msg){return `<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px"><use href="#seal"/></svg><h2 class="t">よくできました!</h2><p class="sub" style="margin:0">${esc(msg)}</p></div><div class="nav2"><button class="btn alt" data-act="lback">Back to unit</button><button class="btn" data-act="nextstep">Next step ›</button></div>`}
+function transcriptHTML(d){const g={};(d.cast||[]).forEach(c=>g[c.name]=c.gender);return (d.lines||[]).map((l,i)=>`<div class="line" data-line="${i}"><div class="who">${esc(l.who||'')}</div><div><div class="jt">${ruby(l.jp||'')}</div>${showRomaji()&&l.romaji?`<div class="rm">${esc(l.romaji)}</div>`:''}<div class="tr ${showEnglish()?'':'blur'}">${esc(l.en||'')}</div></div></div>`).join('')}
+function sceneItems(d,only){const g={};(d.cast||[]).forEach(c=>g[c.name]=c.gender);const r=LZ.u.lv.rate*S.set.rate/.9;return (d.lines||[]).filter((_,i)=>only==null||i===only).map(l=>({lang:'ja',text:plain(l.jp),g:g[l.who]||'f',rate:r}))}
+$('#lesson').addEventListener('click',e=>{
+ const tr=e.target.closest('.tr.blur');if(tr){tr.classList.remove('blur');return}
+ const t=e.target.closest('[data-act]');const sayEl=e.target.closest('[data-say]');const ln=e.target.closest('[data-line]');
+ if(!t){if(ln)speak(sceneItems(LZ.data,+ln.dataset.line));else if(sayEl)sayJa(sayEl.dataset.say);return}
+ const a=t.dataset.act;
+ if(a==='lback'){stopSpeak();const u=LZ.u;LZ=null;PSEL=UBYID[u.id]?u.id:null;go('path');return}
+ if(a==='retry')return LZ.exam?loadExam(LZ.exam,S.attempts['exam-'+LZ.exam.id]||1):loadStep(true);
+ if(a==='cnext'){if(LZ.i+1<LZ.cards.length){LZ.i++;renderLesson();speakCard()}else{LZ.phase='quiz';startQuiz(wordsDrill(LZ.data),{onDone:finishWords})}return}
+ if(a==='cprev'){LZ.i--;renderLesson();speakCard();return}
+ if(a==='gdrill'){LZ.phase='quiz';startQuiz(normQs(LZ.data.drill),{onDone:finishGrammar});$('#lesson').scrollTop=0;return}
+ if(a==='qpick'&&QZ&&!QZ.answered){QZ.picked=+t.dataset.j;return quizAnswer(QZ.picked===QZ.qs[QZ.i].answer)}
+ if(a==='qcheck')return checkTyped();
+ if(a==='qskip'&&QZ&&!QZ.answered){QZ.typed=($('#qin')||{}).value||'';return quizAnswer(false)}
+ if(a==='qnext')return quizNext();
+ if(a==='qaudio')return speakAudio(QZ.qs[QZ.i].audio);
+ if(a==='lplay')return speak(sceneItems(LZ.data));
+ if(a==='lpeek'){LZ.peek=!LZ.peek;return renderLesson()}
+ if(a==='rvshow'){const r=LZ.rev[+t.dataset.i];r.show=true;renderLesson();return sayJa(r.model||'')}
+ if(a==='teachit'){S.topic='teach';S.bibleLesson=LZ.s.n;save();LZ=null;go('talk');return}
+ if(a==='nextstep'){const u=LZ.u;const s=nextStep(u);if(passed(u)&&stepDone(u,s)){PSEL=u.id;LZ=null;return go('path')}return openStep(u,s)}
+ if(a==='nextunit'){const u=curUnit();LZ=null;PSEL=u.id;return go('path')}
+ if(a==='retake'){if(LZ.exam)return loadExam(LZ.exam,S.attempts['exam-'+LZ.exam.id]||1);if(LZ.s.type==='ktest')return openStep(LZ.u,LZ.s);return loadStep()}
+});
+$('#lesson').addEventListener('input',e=>{const t=e.target.closest('[data-rv]');if(t&&LZ&&LZ.rev)LZ.rev[+t.dataset.rv].mine=t.value});
+$('#lesson').addEventListener('keydown',e=>{if(e.target.id==='qin'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();QZ&&QZ.answered?quizNext():checkTyped()}});
+function checkTyped(){if(!QZ||QZ.answered)return;const v=($('#qin')||{}).value||'';if(!v.trim())return;QZ.typed=v;const q=QZ.qs[QZ.i];quizAnswer(q.accept.some(a=>a&&norm(a)===norm(v)))}
+
+/* ================= talk ================= */
+let busy=false,errState=null;
+const bibleN=()=>S.bibleLesson||(curUnit().book||[1])[0];
+const topicKey=()=>S.topic==='unit'?'unit:'+curUnit().id:(S.topic==='bible'||S.topic==='teach')?S.topic+':'+(S.passage?'p:'+S.passage.title.slice(0,40):bibleN()):S.topic;
+const hist=()=>(S.hist[topicKey()]=S.hist[topicKey()]||[]);
+function renderTopics(){const u=curUnit();
+ $('#topics').innerHTML=`<button class="tp unit ${S.topic==='unit'?'on':''}" data-t="unit">This unit<span class="kl">${esc(u.jp)}</span></button>`+TOPICS.map(t=>`<button class="tp ${t.id===S.topic?'on':''}" data-t="${t.id}">${esc(t.en)}<span class="kl">${esc(t.jp)}</span></button>`).join('')}
+$('#uprog').addEventListener('click',e=>{if(e.target.id==='clrpass'){S.passage=null;errState=null;save();renderLog()}});
+$('#uprog').addEventListener('change',e=>{if(e.target.id==='blsel'){S.bibleLesson=+e.target.value;errState=null;save();renderLog()}});
+$('#topics').addEventListener('click',e=>{const b=e.target.closest('.tp');if(!b||busy)return;S.topic=b.dataset.t;errState=null;save();renderTopics();renderLog()});
+function jaBlock(l,blur){return `<div class="ja" data-say="${esc(plain(l.text))}"><div class="jt">${ruby(l.text)}</div>${showRomaji()&&l.romaji?`<div class="rm">${esc(l.romaji)}</div>`:''}${l.en?`<div class="tr ${blur?'blur':''}">${esc(l.en)}</div>`:''}</div>`}
+function yukiHTML(m,i){const blur=!showEnglish();
+ let h=m.lines.map(l=>l.lang==='ja'?jaBlock(l,blur):`<p>${esc(l.text)}</p>`).join('');
+ if(m.correction&&m.correction.better)h+=`<div class="corr"><div style="font-weight:700">${stage()>=6?'こう言うと自然です':'Try saying it like this'}</div><div class="ja" data-say="${esc(plain(m.correction.better))}" style="margin:4px 0;background:transparent;border:0;padding:0"><div class="jt">${ruby(m.correction.better)}</div>${showRomaji()&&m.correction.romaji?`<div class="rm">${esc(m.correction.romaji)}</div>`:''}</div>${m.correction.why?`<div>${esc(m.correction.why)}</div>`:''}</div>`;
+ if(m.vocab&&m.vocab.length)h+=`<div class="vocab">${m.vocab.map(v=>`<span class="vc">＋ ${ruby(v.jp)} · ${esc(v.en)}</span>`).join('')}</div>`;
+ return `<div class="msg"><svg class="seal"><use href="#seal"/></svg><div class="bub">${h}<div class="acts"><button class="mini" data-replay="${i}">▶ Replay</button></div></div></div>`}
+function unitTalkCount(){return hist().filter(m=>m.role==='me').length}
+function renderLog(){
+ const h=hist(),log=$('#log'),u=curUnit(),isU=S.topic==='unit';
+ const up=$('#uprog');const isB=S.topic==='bible'||S.topic==='teach';up.hidden=!(isB||(isU&&!u.kana));
+ if(isB&&S.passage)up.innerHTML=`${S.topic==='teach'?'You explain':esc(TN())+' teaches'}: ${esc(S.passage.title)} <button class="mini" id="clrpass">✕ back to lessons</button>`;
+ else if(isB)up.innerHTML=`${S.topic==='teach'?'You teach '+esc(TN())+' (she plays the student)':esc(TN())+' teaches you'} · <select id="blsel" style="max-width:62%;font-size:14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:3px">${LFF.map((x,i)=>`<option value="${i+1}" ${bibleN()===i+1?'selected':''}>${String(i+1).padStart(2,'0')} ${esc(x[1]||x[0])}</option>`).join('')}</select>`;
+ if(!isB&&isU&&!u.kana){const tStep=stepsOf(u).find(s=>s.type==='talk');up.textContent=stepDone(u,tStep)?`Unit conversation complete ✓ Keep chatting as long as you like.`:`Unit conversation: ${Math.min(5,unitTalkCount())}/5 replies to complete this step`}
+ if(!h.length&&!busy){const t=isB&&S.passage?{en:S.topic==='teach'?'Explain this passage':'Study this passage',scene:`${S.passage.title}. ${S.topic==='teach'?`You explain it in Japanese; ${TN()} plays a curious listener and coaches your Japanese.`:`${TN()} goes through it with you in Japanese at your level.`}`}:isB?{en:S.topic==='teach'?'Teach lesson '+bibleN():'Bible lesson '+bibleN(),scene:S.topic==='teach'?`You lead the study of 「${lffTitle(bibleN())}」 in Japanese. ${TN()} plays a curious student and coaches your Japanese.`:`${TN()} studies 「${lffTitle(bibleN())}」 with you in Japanese at your level, then asks 復習 questions.`}:isU?{en:u.t,scene:u.kana?'Practice saying your first Japanese words with '+TN()+'.':'Practice '+u.g.slice(0,3).join(', ')+' while talking about '+u.th+'.'}:TOPICS.find(x=>x.id===S.topic);
+  log.innerHTML=`<div class="welcome"><svg class="seal"><use href="#seal"/></svg><h2>${S.set.name?esc(S.set.name)+', ready':'Ready'} to talk: ${esc(t.en)}</h2><p>${esc(t.scene)}</p><button class="btn" id="start">Start conversation</button>${errState?`<div class="err" style="margin-top:14px">${esc(errState.msg)}</div>`:''}</div>`;
+  $('#sug').innerHTML='';return}
+ let out=h.map((m,i)=>m.role==='me'?`<div class="msg me"><div class="bub">${esc(m.text)}</div></div>`:yukiHTML(m,i)).join('');
+ if(busy)out+=`<div class="msg"><svg class="seal"><use href="#seal"/></svg><div class="bub typing">${esc(TN())} is thinking <i></i><i></i><i></i></div></div>`;
+ if(errState)out+=`<div class="err">${esc(errState.msg)} ${errState.retry?'<button class="mini" id="retry">Try again</button>':''}</div>`;
+ if(h.length>1&&!busy)out+=`<div style="text-align:center"><button class="mini" id="newc">New conversation</button></div>`;
+ log.innerHTML=out;log.scrollTop=log.scrollHeight;
+ const last=h[h.length-1];
+ $('#sug').innerHTML=!busy&&last&&last.role==='yuki'&&last.suggest?last.suggest.map(s=>`<button class="sg" data-s="${esc(plain(s))}">${ruby(s)}</button>`).join(''):'';
+ $('#box').placeholder=stage()>=3?'日本語でどうぞ…':'Reply, or try Japanese…'}
+$('#log').addEventListener('click',e=>{const j=e.target.closest('.ja'),tr=e.target.closest('.tr.blur');
+ if(tr){tr.classList.remove('blur');return}
+ if(e.target.closest('#start'))return ask('',true);
+ if(e.target.closest('#retry')&&errState)return errState.retry();
+ if(e.target.closest('#newc')){S.hist[topicKey()]=[];errState=null;save();return renderLog()}
+ const r=e.target.closest('[data-replay]');if(r)return speakMsg(hist()[+r.dataset.replay]);
+ if(j)sayJa(j.dataset.say)});
+$('#sug').addEventListener('click',e=>{const b=e.target.closest('.sg');if(!b)return;$('#box').value=b.dataset.s;grow();$('#box').focus()});
+function speakMsg(m){if(!m||!m.lines)return;speak(m.lines.filter(l=>l.lang==='ja'||stage()<=4).map(l=>({lang:l.lang,text:plain(l.text)})))}
+function tutorPrompt(user,opening){
+ const st=ST(),u=curUnit(),isU=S.topic==='unit';
+ const n=bibleN();const lt=lffText(n),PASS=S.passage&&(S.topic==='bible'||S.topic==='teach')?S.passage:null;
+ const t=PASS?(S.topic==='bible'?{en:'Passage study',jp:'本文の学習',scene:`${TN()} studies this passage from 「${PASS.title}」 with the learner: explain it one point at a time in Japanese at the learner's level, check understanding, and ask questions for the learner to answer in Japanese. Passage (from the learner's own copy):\n<<<${PASS.text}>>>`}:{en:'Teaching practice',jp:'教える練習',scene:`ROLE-PLAY: the learner is practicing explaining this passage from 「${PASS.title}」 in Japanese so they can teach it to others. In your "ja" lines play a polite, sincere listener at the learner's level who asks natural questions and sometimes needs simpler explanations. Put coaching in "correction" (clearer or more natural Japanese, and whether they explained the passage accurately). Passage (from the learner's own copy):\n<<<${PASS.text}>>>`}):S.topic==='bible'?{en:'Bible lesson',jp:'聖書レッスン',scene:`${TN()} conducts a Bible lesson (聖書レッスン) with the learner on lesson ${String(n).padStart(2,'0')} 「${lffTitle(n)}」 (section ${lffSec(n)}) of 「${BOOK}」. The lesson's own question headings, in order: ${LFH[n-1].join(' / ')}. Follow these questions and main points as the book teaches them, one point per turn: explain, refer to Bible verses by reference the way the book does (e.g. （ヨハネ 17:3を読む。）) with a brief explanation in your own words, then ask a 復習-style question for the learner to answer in Japanese. Use original wording at the learner's level.${lt?`\nThe lesson's text from the learner's own copy (follow its content faithfully):\n<<<${lt.slice(0,4000)}>>>`:''}`}:S.topic==='teach'?{en:'Teaching practice',jp:'教える練習',scene:`ROLE-PLAY: the learner is practicing conducting a Bible lesson in Japanese on lesson ${String(n).padStart(2,'0')} 「${lffTitle(n)}」 of 「${BOOK}」, so that they can teach it to a Japanese speaker. The lesson's question headings: ${LFH[n-1].join(' / ')}. In your "ja" lines play a polite, sincere student (生徒) at the learner's level: answer their questions, ask natural follow-up questions a real student would ask, and sometimes need things explained more simply. Put coaching in "correction" (more natural or clearer Japanese for what they said, and whether it matched the lesson's point) and, where the stage allows English, in short "en" lines. On the opening turn, greet them as the student and invite them to begin.${lt?`\nThe lesson's text from the learner's own copy, for checking accuracy:\n<<<${lt.slice(0,4000)}>>>`:''}`}:isU?{en:'Unit practice',jp:u.jp,scene:u.kana?'The learner is just starting kana. Teach a few greetings and very simple phrases.':`JLPT ${u.lv.name} unit "${u.t}". Steer the conversation so the learner uses this unit's grammar (${u.g.join('; ')}) and recent words (${(ITEMS[u.id]||[]).slice(-30).map(x=>plain(x.jp)).join('、')||'theme vocabulary'}), on the theme: ${u.th}.`}:TOPICS.find(x=>x.id===S.topic);
+ const tr=hist().slice(-14).map(m=>m.role==='me'?`Learner: ${m.text}`:`${TN()}: ${m.say}`).join('\n');
+ const known=allItems().filter(x=>x.t==='w').slice(-120).map(v=>plain(v.jp)).join('、');
+ return `You are ${TN()} (${TNJ()}), a warm, patient, encouraging female Japanese tutor in a course app that leads an English-speaking adult from zero to JLPT N1 so they can understand anime, J-dramas and news. The learner${S.set.name?', '+S.set.name+',':''} is currently at JLPT ${u.lv.name} level and types Japanese on a phone keyboard.
+Language-mix stage ${stage()} of 6 ("${st.name}"): ${st.rule}
+Use only grammar and vocabulary up to JLPT ${u.lv.name}, with at most 2 new words per turn.
+${STYLE()}
+${THINK}
+Scene: ${t.en} (${t.jp}). ${t.scene}
+Each turn: react to what the learner said, teach briefly, then ask ONE question they can answer. Keep turns short (2–5 lines). Default to polite です/ます unless the scene calls for casual speech.
+Words the learner has met: ${known||'none yet'}.
+Transcript so far:
+${tr||'(nothing yet)'}
+
+${opening?'Begin now: greet the learner and open the scene.':'The learner just wrote: """'+user.slice(0,600)+'"""'}
+
+Reply with ONLY one JSON object, shaped like:
+{"lines":[{"lang":"en","text":"English sentence"},{"lang":"ja","text":"日本語{にほんご}を話{はな}しましょう。","romaji":"nihongo o hanashimashou.","en":"Let's speak Japanese."}],"correction":null,"vocab":[{"jp":"話{はな}す","reading":"はなす","romaji":"hanasu","en":"to speak"}],"score":0,"suggest":["はい、お願{ねが}いします。"]}
+Rules: every kanji run is followed by its reading in braces, e.g. 買{か}います; never use braces otherwise. A "ja" line holds Japanese only. "vocab": only words NEW this turn. "score" rates the learner's last message: 0 English only or opening, 1 Japanese with mistakes, 2 correct, 3 natural. "correction": null unless their Japanese had a mistake or they used English/romaji at stage 3+; then {"said":"","better":"natural Japanese with readings","romaji":"","why":"one short reason"}. "suggest": 2–3 short replies they could send next, at their level.`}
+function normalizeMsg(r){
+ if(!r||!Array.isArray(r.lines))return null;
+ const lines=r.lines.filter(l=>l&&l.text).map(l=>({lang:l.lang==='ja'||(l.lang!=='en'&&hasJP(l.text))?'ja':'en',text:String(l.text),romaji:String(l.romaji||''),en:String(l.en||'')}));
+ if(!lines.length)return null;
+ const c=r.correction&&r.correction.better?{better:String(r.correction.better),romaji:String(r.correction.romaji||''),why:String(r.correction.why||'')}:null;
+ const vocab=(Array.isArray(r.vocab)?r.vocab:[]).filter(v=>v&&v.jp).slice(0,6).map(v=>({jp:String(v.jp),reading:String(v.reading||reading(v.jp)),romaji:String(v.romaji||''),en:String(v.en||'')}));
+ return{role:'yuki',lines,correction:c,vocab,score:Math.max(0,Math.min(3,Math.round(+r.score||0))),suggest:(Array.isArray(r.suggest)?r.suggest:[]).map(String).filter(Boolean).slice(0,3),say:lines.map(l=>plain(l.text)).join(' ')}}
+async function ask(text,opening,isRetry){
+ if(busy)return;
+ if(!SAMPLE){errState={msg:'Conversation needs an AI. Set up your provider and key in Progress › Your AI.'};return renderLog()}
+ busy=true;errState=null;const h=hist();
+ if(text&&!isRetry){h.push({role:'me',text});S.stats.msgs++;if(hasJP(text))S.stats.jp++;save()}
+ renderLog();$('#send').disabled=true;
+ try{const r=await SAMPLE.json(tutorPrompt(text,opening),{modelTier:'quick',cache:false});
+  const m=normalizeMsg(r);if(!m)throw{code:'invalid_json'};
+  h.push(m);if(h.length>40)h.splice(0,h.length-40);
+  const u=curUnit(),b=S.topic==='unit'&&!u.kana?u.id:(S.topic==='bible'||S.topic==='teach')?'book':'talk';
+  const nv=addItems(b,m.vocab.map(v=>({t:'w',...v})));
+  if(!opening)gain(5+m.score*8+(hasJP(text)?5:0)+nv*2);else markDay();
+  if(S.topic==='unit'&&!u.kana){const ts=stepsOf(u).find(s=>s.type==='talk');if(!stepDone(u,ts)&&unitTalkCount()>=5){markStep(u,ts,100);gain(15);toast('Conversation step complete ✓')}}
+  save();busy=false;renderLog();renderHead();if(S.set.auto)speakMsg(m);
+ }catch(e){busy=false;const c=e&&e.code;
+  errState={msg:c==='bad_key'?'Your AI key was rejected. Check it in Progress › Your AI.':c==='bad_model'?'That AI model wasn’t found. Pick another in Progress › Your AI.':c==='network'?'Couldn’t reach your AI provider. Check your connection.':c==='rate_limited'?'Too many messages for now. Try again in a minute.':c==='session_expired'?'Your Claude session expired. Sign in again.':'Yuki got tongue-tied on that one.',retry:c==='bad_key'?null:()=>ask(text,opening,true)};renderLog()}
+ finally{$('#send').disabled=false}}
+function grow(){const b=$('#box');b.style.height='auto';b.style.height=Math.min(120,b.scrollHeight)+'px'}
+$('#box').addEventListener('input',grow);
+$('#box').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendNow()}});
+function sendNow(){const v=$('#box').value.trim();if(!v||busy)return;$('#box').value='';grow();stopSpeak();if(listening&&DICT)DICT.stop().catch(()=>{});ask(v,false)}
+$('#send').addEventListener('click',sendNow);
+$('#hbtn').addEventListener('click',()=>{const h=$('#help');h.hidden=!h.hidden;if(!h.hidden)$('#hq').focus()});
+async function helpAsk(){const q=$('#hq').value.trim();if(!q)return;const out=$('#hout');if(!SAMPLE){out.textContent='Set up your AI in Progress › Your AI first.';return}out.textContent='Thinking…';
+ try{const r=await SAMPLE.json(`Translate into natural Japanese (polite です/ます unless the request is clearly casual) that a JLPT ${curUnit().lv.name} learner could say. Text: """${q.slice(0,300)}"""
+Reply with only JSON: {"jp":"Japanese, every kanji run followed by its reading in braces like 買{か}います","romaji":"...","en":"literal meaning back in English","tip":"one short usage tip"}`,{modelTier:'quick'});
+  if(!r||!r.jp)throw 0;out.dataset.jp=plain(r.jp);
+  out.innerHTML=`<div class="ja" data-say="${esc(plain(r.jp))}"><div class="jt">${ruby(r.jp)}</div><div class="rm">${esc(r.romaji||'')}</div><div class="tr">${esc(r.en||'')}</div></div>${r.tip?`<div>${esc(r.tip)}</div>`:''}<div class="acts"><button class="mini" id="huse">Use this reply</button></div>`;sayJa(r.jp)
+ }catch(e){out.textContent=e&&e.code==='rate_limited'?'Too many requests, try again shortly.':'Couldn’t translate that. Try rewording.'}}
+$('#hgo').addEventListener('click',helpAsk);
+$('#hq').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();helpAsk()}});
+$('#hout').addEventListener('click',e=>{if(e.target.closest('#huse')){$('#box').value=$('#hout').dataset.jp||'';grow();$('#help').hidden=true;$('#box').focus()}else{const j=e.target.closest('.ja');if(j)sayJa(j.dataset.say)}});
+let listening=false,micBase='';
+$('#mic').addEventListener('click',()=>{if(!DICT)return;if(listening){DICT.stop().catch(()=>{});return}stopSpeak();micBase=$('#box').value.trim();DICT.start().catch(e=>{if(e&&e.code==='not_granted')$('#mic').hidden=true})});
+
+/* ================= review (items + kana) ================= */
+let REVTAB='items',rv=null,wq='',kmode='chart',quiz=null,traceIdx=0;
+function renderReview(){const el=$('#review');
+ el.innerHTML=`<h2 class="t">Review</h2><p class="sub">Spaced review of everything you've learned, plus kana practice.</p><div class="seg" id="rtab"><button data-r="items" class="${REVTAB==='items'?'on':''}">Words &amp; kanji</button><button data-r="kana" class="${REVTAB==='kana'?'on':''}">Kana</button><button data-r="book" class="${REVTAB==='book'?'on':''}">Library</button></div><div id="rbody"></div>`;
+ REVTAB==='items'?renderItems():REVTAB==='kana'?renderKana():renderLib()}
+$('#review').addEventListener('click',e=>{const b=e.target.closest('#rtab button');if(b){REVTAB=b.dataset.r;rv=null;quiz=null;renderReview()}});
+const IV=[10*60e3,DAY,3*DAY,7*DAY,16*DAY,35*DAY,80*DAY];
+function startReview(){const d=dueItems().sort((a,b)=>(a.due||0)-(b.due||0)).slice(0,20);if(!d.length){toast('Nothing due. Nice work!');return}rv={q:d,i:0,shown:false};if(view==='review')renderItems()}
+function findBucket(it){for(const b in ITEMS)if(ITEMS[b].includes(it))return b;return null}
+function renderItems(){const body=$('#rbody');if(!body)return;const all=allItems(),due=dueItems();let h='';
+ if(rv&&rv.i<rv.q.length){const v=rv.q[rv.i],isK=v.t==='k';
+  h+=`<div class="card" style="text-align:center"><div class="qstat"><span>${rv.i+1} / ${rv.q.length}</span><button class="mini" id="rend">End</button></div>
+  ${isK?`<div class="sub" style="margin:8px 0 0">Kanji: type a reading</div><span class="kbig">${esc(v.jp)}</span>`:(v.def&&stage()>=5?`<div class="sub" style="margin:8px 0 0">どの言葉ですか。</div><div class="qq" style="font-size:22px">${ruby(v.def)}</div><div class="tr blur">${esc(v.en)}</div>`:`<div class="sub" style="margin:8px 0 0">How do you say…</div><div class="qq" style="font-size:24px">${esc(v.en)}</div>`)}
+  ${rv.shown?`${isK?`<div style="font-size:20px;font-weight:700">${esc(v.en)}</div><div class="rd"><span>On</span><b>${esc((v.on||[]).join('、')||'—')}</b><span>Kun</span><b>${esc((v.kun||[]).join('、')||'—')}</b></div>`:`<div class="wbig" data-say="${esc(plain(v.jp))}">${ruby(v.jp)}</div><div class="rm">${esc(v.romaji||'')}</div>`}${rv.ok===false?'<div class="fb bad">Not quite.</div>':rv.ok?'<div class="fb good">正解!</div>':''}
+   <div class="grade"><button class="btn alt" data-g="0">Again</button><button class="btn alt" data-g="1">Hard</button><button class="btn" data-g="2">Good</button></div>`
+  :`<input class="ans" id="rans" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="${isK?'reading in ひらがな':'Type it in Japanese'}"><div class="nav2"><button class="btn alt" id="rshow">Show</button><button class="btn" id="rchk">Check</button></div>`}</div>`}
+ else{rv=null;h+=`<div class="card due"><div><b>${due.length}</b><div class="sub" style="margin:4px 0 0">due · ${all.filter(x=>x.t==='w').length} words · ${all.filter(x=>x.t==='k').length} kanji</div></div><button class="btn" id="rstart" ${due.length?'':'disabled'}>Review ${Math.min(20,due.length)||''}</button></div>`}
+ const list=all.filter(v=>!wq||(v.jp+v.reading+(v.romaji||'')+v.en).toLowerCase().includes(wq.toLowerCase())).slice(-200).reverse();
+ h+=`<input class="search" id="wsearch" placeholder="Search words and kanji" value="${esc(wq)}"><ul class="wl">${list.map(v=>`<li><button class="ib" data-say="${esc(plain(v.t==='k'?(v.ex&&v.ex[0]?v.ex[0].jp:v.jp):v.jp))}" aria-label="Play">▶</button><div class="w"><div class="wj">${v.t==='k'?`<span class="kl" style="font-size:24px">${esc(v.jp)}</span>`:ruby(v.jp)}</div><div class="we">${esc(v.t==='k'?v.reading+' · ':v.romaji?v.romaji+' · ':'')}${esc(v.en)}</div></div><span class="bx">${v.t==='k'?'kanji · ':''}box ${v.box||0}</span></li>`).join('')||'<li class="sub">Nothing here yet. Complete a Words &amp; kanji step to fill your deck.</li>'}</ul>`;
+ body.innerHTML=h;const s=$('#wsearch');s.oninput=()=>{wq=s.value;const p=s.selectionStart;renderItems();const n=$('#wsearch');n.focus();n.setSelectionRange(p,p)};
+ const a=$('#rans');a&&a.focus({preventScroll:true})}
+function rCheck(){const a=$('#rans'),val=(a&&a.value||'').trim();if(!val)return;const v=rv.q[rv.i];
+ const acc=v.t==='k'?[...(v.on||[]),...(v.kun||[])].flatMap(r=>{const h=toHira(String(r));return[h.replace(/\(.*?\)|（.*?）/g,''),h.replace(/[()（）]/g,'')]}):[plain(v.jp),v.reading,reading(v.jp)];
+ rv.ok=acc.some(x=>x&&norm(x)===norm(val));rv.shown=true;renderItems();sayJa(v.t==='k'&&v.ex&&v.ex[0]?v.ex[0].jp:v.jp)}
+function rGrade(g){const v=rv.q[rv.i];v.box=g===0?0:g===1?Math.max(1,v.box||0):Math.min(6,(v.box||0)+1);v.due=Date.now()+IV[g===0?0:v.box]*(g===1?.6:1);if(g===2)gain(2);const b=findBucket(v);if(b)saveBucket(b);
+ rv.i++;rv.shown=false;rv.ok=null;if(rv.i>=rv.q.length){rv=null;save();toast('Review done. お疲れ様でした!')}renderItems()}
+$('#review').addEventListener('click',e=>{if(REVTAB!=='items')return;
+ if(e.target.closest('#rstart'))return startReview();
+ if(e.target.closest('#rend')){rv=null;return renderItems()}
+ if(e.target.closest('#rshow')){rv.shown=true;renderItems();const v=rv.q[rv.i];return sayJa(v.t==='k'&&v.ex&&v.ex[0]?v.ex[0].jp:v.jp)}
+ if(e.target.closest('#rchk'))return rCheck();
+ const g=e.target.closest('[data-g]');if(g)return rGrade(+g.dataset.g);
+ const sy=e.target.closest('[data-say]');if(sy)sayJa(sy.dataset.say)});
+$('#review').addEventListener('keydown',e=>{if(e.target.id==='rans'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();rCheck()}if(e.target.id==='kans'&&e.key==='Enter'&&!e.isComposing){e.preventDefault();checkWrite()}});
+
+/* book passage study */
+let BK={text:'',data:null,busy:false,err:'',ans:{},src:''};
+function bookHTML(){const d=BK.data;
+ let h=LIBSEL?'':`<p class="sub">Paste a passage (up to about 1,500 characters) from any Japanese text you're studying. ${esc(TN())} reads it with you: readings, sentence-by-sentence meaning, vocabulary, grammar, questions, and how you could explain it simply to someone else.</p>
+ <textarea id="bktext" class="search" lang="ja" style="min-height:120px;margin-top:0" placeholder="ここに本文を貼り付けてください">${esc(BK.text)}</textarea>
+ <div class="nav2" style="margin-top:4px"><button class="btn" id="bkgo" ${BK.busy?'disabled':''}>${BK.busy?'Reading…':'Study this passage'}</button></div>`;
+ if(BK.busy&&LIBSEL)h+=`<div class="loading" style="padding:20px"><svg class="seal"><use href="#seal"/></svg>${esc(TN())} is reading it with you…</div>`;
+ if(BK.err)h+=`<div class="err" style="margin-top:10px">${esc(BK.err)}</div>`;
+ if(d){h+=`<h3>Sentence by sentence</h3><p class="sub">Tap to hear. Translations ${showEnglish()?'shown':'hidden until tapped'}.</p>${(d.sentences||[]).map(x=>`<div class="ex" data-say="${esc(plain(x.jp))}"><div class="jt">${ruby(x.jp||'')}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(x.en||'')}</div></div>`).join('')}`;
+  if((d.vocab||[]).length)h+=`<h3>Vocabulary</h3><ul class="wl">${d.vocab.map(v=>`<li><button class="ib" data-say="${esc(plain(v.jp))}" aria-label="Play">▶</button><div class="w"><div class="wj">${ruby(v.jp||'')}</div><div class="we">${esc(v.en||'')}${v.level?' · '+esc(v.level):''}</div></div></li>`).join('')}</ul><div class="nav2"><button class="btn alt" id="bkadd">${BK.added?'Added ✓':'Add all to my review deck'}</button></div>`;
+  if((d.grammar||[]).length)h+=`<h3>Grammar</h3>${d.grammar.map(g=>`<div class="gpt"><h4 style="font-size:18px">${ruby(g.pattern||'')} <span class="pill">${esc(g.level||'')}</span></h4><div>${esc(g.meaning||'')}</div>${g.example?`<div class="ex" data-say="${esc(plain(g.example))}"><div class="jt">${ruby(g.example)}</div></div>`:''}</div>`).join('')}`;
+  if((d.questions||[]).length)h+=`<h3>Check your understanding</h3>${d.questions.map((q,i)=>{const a=BK.ans[i];return `<div class="card" style="margin-bottom:10px"><div class="jt" style="font-size:17px">${ruby(q.q||'')}</div><div class="opts one">${(q.choices||[]).map((c,j)=>`<button class="op ${a!=null?(j===+q.answer?'good':j===a?'bad':''):''}" data-bq="${i}" data-j="${j}" ${a!=null?'disabled':''}>${ruby(c)}</button>`).join('')}</div></div>`}).join('')}`;
+  if(d.explain)h+=`<h3>How you could explain it</h3><div class="ex" data-say="${esc(plain(d.explain))}"><div class="jt">${ruby(d.explain)}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(d.explainEn||'')}</div></div><div class="nav2"><button class="btn blue" id="bkteach">Practice explaining it to ${esc(TN())} ›</button></div>`}
+ return h}
+async function bookGo(given){const t=given!=null?given:(($('#bktext')||{}).value||'');if(given==null)BK.src='';BK.text=t.trim().slice(0,1800);if(!BK.text)return;if(!SAMPLE){BK.err='Set up your AI in Progress › Your AI first.';return renderLib()}
+ BK.busy=true;BK.err='';BK.data=null;BK.ans={};BK.added=false;renderLib();const lv=curUnit().lv;
+ try{const d=await SAMPLE.json(`${HEAD}
+${THINK}
+The learner (currently JLPT ${lv.name}) is studying this passage from their own copy of 「${BK.src||'a document'}」 so they can understand it and explain it to others in Japanese. Work only from the passage; don't add outside content or reproduce anything beyond it.
+Passage:
+<<<${BK.text}>>>
+Return: "sentences": each sentence of the passage in order with readings added in braces and an English translation; "vocab": up to 15 words a ${lv.name} learner may not know, with JLPT level; "grammar": up to 6 notable patterns with meaning, JLPT level and a new short example; "questions": 3 comprehension questions in Japanese with 4 choices; "explain": how the learner could explain the passage's point simply and kindly to someone, in Japanese at about JLPT ${lv.name} level (3–5 sentences, gentle です/ます), with "explainEn".
+Shape: {"sentences":[{"jp":"","en":""}],"vocab":[{"jp":"","reading":"","romaji":"","en":"","level":"N3"}],"grammar":[{"pattern":"","meaning":"","level":"","example":""}],"questions":[{"q":"","choices":["","","",""],"answer":0}],"explain":"","explainEn":""}`,{modelTier:'default'});
+  if(!d||!Array.isArray(d.sentences))throw{code:'invalid_json'};BK.data=d}
+ catch(e){BK.err=e&&e.code==='rate_limited'?'Too many requests. Try again in a minute.':'Couldn’t study that passage. Try a shorter piece.'}
+ BK.busy=false;if(REVTAB==='book')renderLib()}
+$('#review').addEventListener('click',e=>{if(REVTAB!=='book')return;
+ if(e.target.closest('#bkgo'))return bookGo();
+ if(e.target.closest('#bkteach')){const src=BK.src||'pasted passage';S.passage={title:src,text:BK.text};S.topic='teach';save();go('talk');return}
+ if(e.target.closest('#bkadd')&&BK.data&&!BK.added){const n=addItems('book',(BK.data.vocab||[]).filter(v=>v&&v.jp).map(v=>({t:'w',jp:v.jp,reading:v.reading||reading(v.jp),romaji:v.romaji||'',en:v.en||''})));BK.added=true;save();toast(n+' new word'+(n===1?'':'s')+' added to review');return renderLib()}
+ const q=e.target.closest('[data-bq]');if(q){BK.ans[+q.dataset.bq]=+q.dataset.j;return renderLib()}
+ const tr=e.target.closest('.tr.blur');if(tr){tr.classList.remove('blur');return}
+ const sy=e.target.closest('[data-say]');if(sy)sayJa(sy.dataset.say)});
+$('#review').addEventListener('input',e=>{if(e.target.id==='bktext')BK.text=e.target.value});
+/* ================= library ================= */
+const IDB={p:null,open(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open('hanaso',1);r.onupgradeneeded=()=>r.result.createObjectStore('docs',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+ async run(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('docs',mode);const q=fn(t.objectStore('docs'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})},
+ all(){return this.run('readonly',s=>s.getAll())},put(d){return this.run('readwrite',s=>s.put(d))},del(id){return this.run('readwrite',s=>s.delete(id))}};
+let LIB=[],LIBSEL=null,LIBSEC=null,LIBPART=0,LIBMSG='',LIBDEL=null;
+const PDFJS='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js',PDFW='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js',CMAP='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',JSZ='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+const loadScript=u=>new Promise((res,rej)=>{if(document.querySelector(`script[src="${u}"]`))return res();const s=document.createElement('script');s.src=u;s.onload=res;s.onerror=()=>rej({code:'network'});document.head.appendChild(s)});
+const tidy=t=>String(t||'').replace(/\r/g,'').replace(/([　-鿿＀-￯])[ \t]+(?=[　-鿿＀-￯])/g,'$1').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+async function pdfPages(buf,onp){await loadScript(PDFJS);pdfjsLib.GlobalWorkerOptions.workerSrc=PDFW;const pdf=await pdfjsLib.getDocument({data:buf,cMapUrl:CMAP,cMapPacked:true}).promise;const out=[];
+ for(let i=1;i<=pdf.numPages;i++){const pg=await pdf.getPage(i);const tc=await pg.getTextContent();let s='';for(const it of tc.items){s+=it.str;if(it.hasEOL)s+='\n'}out.push(tidy(s));if(onp&&i%5===0)onp(i,pdf.numPages)}return out}
+async function epubSecs(buf){await loadScript(JSZ);const z=await JSZip.loadAsync(buf);const cont=await z.file('META-INF/container.xml').async('string');const opfPath=(cont.match(/full-path="([^"]+)"/)||[])[1];const opf=await z.file(opfPath).async('string');const base=opfPath.includes('/')?opfPath.replace(/[^/]+$/,''):'';
+ const dp=new DOMParser(),od=dp.parseFromString(opf,'application/xml'),man={};for(const it of od.getElementsByTagNameNS('*','item'))man[it.getAttribute('id')]=it.getAttribute('href');
+ const title=(od.getElementsByTagNameNS('*','title')[0]||{}).textContent||'';const secs=[];
+ for(const ir of od.getElementsByTagNameNS('*','itemref')){const href=man[ir.getAttribute('idref')];if(!href)continue;const f=z.file(decodeURIComponent(base+href))||z.file(base+href);if(!f)continue;
+  let html=await f.async('string');html=html.replace(/<rt[\s\S]*?<\/rt>|<rp[\s\S]*?<\/rp>/gi,'').replace(/<br\s*\/?>/gi,'\n').replace(/<\/(p|div|h\d|li|tr|section)>/gi,'$&\n');
+  const d=dp.parseFromString(html,'text/html');d.querySelectorAll('script,style').forEach(x=>x.remove());const h=d.querySelector('h1,h2,h3')||d.querySelector('title');const text=tidy(d.body?d.body.textContent:'');
+  if(text.length>20)secs.push({label:(h&&h.textContent.trim().slice(0,60))||('Part '+(secs.length+1)),text})}return{title,secs}}
+function textSecs(t){t=tidy(t);const paras=t.split(/\n\s*\n/);const out=[];let cur='';for(const p of paras){if((cur+p).length>2200&&cur){out.push(cur);cur=''}cur+=(cur?'\n\n':'')+p}if(cur)out.push(cur);return out.map((x,i)=>({label:x.split('\n')[0].slice(0,40)||('Part '+(i+1)),text:x}))}
+const nz=t=>toHira(String(t||'')).replace(/[\s？?！!・「」]/g,'').replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-65248));
+function lffMap(texts){const ttl=LFF.map(x=>nz(x[1]).slice(0,9));const N=texts.map(nz);
+ const toc=N.map(t=>ttl.filter(x=>t.includes(x)).length>=4);const map={};let from=0;
+ for(let n=1;n<=60;n++){for(let i=from;i<N.length;i++){if(toc[i])continue;if(N[i].includes(ttl[n-1])){map[n]=i;from=i+1;break}}}return map}
+const garbled=t=>{const n=t.replace(/\s/g,'').length;if(n<40)return false;const bad=(t.match(/[\u0000-\u0008\u000e-\u001f¡-˿‐-⃿ﬀ-ﯿ]/g)||[]).length;const jp=(t.match(/[぀-ヿ一-鿿]/g)||[]).length;return bad>n*.15||jp<n*.15&&bad>8};
+function lffSections(texts,map){const ns=Object.keys(map).map(Number).sort((a,b)=>a-b);return ns.map((n,k)=>{const a=map[n],b=k+1<ns.length?map[ns[k+1]]:Math.min(texts.length,a+4);return{label:String(n).padStart(2,'0')+' '+LFF[n-1][1],n,text:texts.slice(a,Math.max(a+1,b)).join('\n\n')}})}
+async function importFile(file){LIBMSG='Reading '+file.name+'…';renderLib();
+ try{const buf=await file.arrayBuffer();const name=file.name.replace(/\.[^.]+$/,'');let doc={id:'d'+Date.now(),title:name,kind:'txt',added:Date.now(),sections:[]};
+  if(/\.pdf$/i.test(file.name)||file.type==='application/pdf'){doc.kind='pdf';const pages=await pdfPages(buf,(i,n)=>{LIBMSG=`Reading ${file.name}: page ${i} of ${n}…`;renderLib()});
+   const bad=pages.filter(garbled).length;doc.warn=bad>pages.length*.2?`${bad} of ${pages.length} pages use a font whose text can’t be read on this device. If there’s an EPUB edition, import that instead for clean text.`:'';
+   const m=lffMap(pages);
+   if(Object.keys(m).length>=40){doc.lff=true;doc.title='いつまでも幸せに暮らせます';doc.sections=lffSections(pages,m)}
+   else doc.sections=pages.map((t,i)=>({label:'p. '+(i+1)+'  '+t.split('\n').find(x=>x.trim().length>3)?.slice(0,40),text:t})).filter(x=>x.text.trim().length>30)}
+  else if(/\.epub$/i.test(file.name)){doc.kind='epub';const r=await epubSecs(buf);doc.title=r.title||name;doc.sections=r.secs;const m=lffMap(r.secs.map(x=>x.text));if(Object.keys(m).length>=40){doc.lff=true;doc.title='いつまでも幸せに暮らせます';doc.sections=lffSections(r.secs.map(x=>x.text),m)}}
+  else{doc.sections=textSecs(new TextDecoder().decode(buf))}
+  if(!doc.sections.length)throw{code:'empty'};
+  await IDB.put(doc);LIB=await IDB.all();LIBMSG=`Added “${doc.title}” · ${doc.sections.length} sections${doc.lff?' · linked to your Bible-lesson steps':''}.${doc.warn?' '+doc.warn:''}`}
+ catch(e){LIBMSG=e&&e.code==='network'?'Couldn’t load the file reader. Connect to the internet once and try again.':e&&e.code==='empty'?'No readable text found. Scanned PDFs (images of pages) can’t be read yet.':'Couldn’t read that file.'}
+ renderLib()}
+const lffDoc=()=>LIB.find(d=>d.lff);
+function lffText(n){const d=lffDoc();if(!d)return'';const s=d.sections.find(x=>x.n===n);return s?s.text:''}
+const parts=t=>{const out=[];let cur='';for(const p of t.split(/\n/)){if((cur+p).length>1500&&cur){out.push(cur);cur=''}cur+=(cur?'\n':'')+p}if(cur)out.push(cur);return out.length?out:['']};
+function renderLib(){const b=$('#rbody');if(!b)return;let h='';
+ if(LIBSEL){const d=LIB.find(x=>x.id===LIBSEL);if(!d){LIBSEL=null;return renderLib()}
+  if(LIBSEC==null){h=`<button class="back" data-lib="up">‹ Library</button><h3 style="margin-top:0">${esc(d.title)}</h3><p class="sub">${d.sections.length} sections${d.lff?' · linked to your Bible-lesson steps ✓':''}</p>${d.warn?`<div class="notice" style="margin:0 0 10px">${esc(d.warn)}</div>`:''}<ul class="wl">${d.sections.map((x,i)=>`<li><button class="w" style="text-align:left;min-height:44px" data-sec="${i}"><div class="wj" style="font-size:16px">${esc(x.label||'Section '+(i+1))}</div><div class="we">${esc(x.text.replace(/\s+/g,' ').slice(0,60))}…</div></button></li>`).join('')}</ul>`}
+  else{const sec=d.sections[LIBSEC],ps=parts(sec.text);LIBPART=Math.min(LIBPART,ps.length-1);
+   h=`<button class="back" data-lib="sec">‹ ${esc(d.title)}</button><h3 style="margin-top:0">${esc(sec.label)}</h3>${ps.length>1?`<div class="rows">${ps.map((_,i)=>`<button class="rw ${i===LIBPART?'on':''}" data-part="${i}" style="font-family:inherit">Part ${i+1}</button>`).join('')}</div>`:''}
+   <div class="passage" style="white-space:pre-wrap;font-size:16px;line-height:1.9;max-height:45vh;overflow:auto">${esc(ps[LIBPART])}</div>
+   <div class="nav2"><button class="btn" data-lib="study" ${BK.busy?'disabled':''}>Study this part</button></div>
+   <div class="nav2"><button class="btn alt" data-lib="learn">${esc(TN())} teaches it</button><button class="btn blue" data-lib="teach">I explain it</button></div>`+bookHTML()}}
+ else{h=`<p class="sub">Import documents you study (PDF, EPUB or text) and study them with ${esc(TN())}. Files stay on this device.</p>
+  <label class="btn wide" style="display:block;margin-bottom:8px">Import a document<input type="file" id="libfile" accept=".pdf,.epub,.txt,.md,application/pdf,application/epub+zip,text/plain" hidden></label>
+  ${LIBMSG?`<div class="card" style="font-size:14px;margin-bottom:10px">${esc(LIBMSG)}</div>`:''}
+  ${!lffDoc()?`<p class="foot" style="margin-top:4px">Tip: import 「${esc(BOOK)}」 (the EPUB edition from jw.org gives the cleanest text) and the Bible-lesson steps will use its real lesson text.</p>`:''}
+  <ul class="wl">${LIB.map(d=>`<li><button class="w" style="text-align:left;min-height:44px" data-doc="${d.id}"><div class="wj" style="font-size:17px">${esc(d.title)}</div><div class="we">${d.kind.toUpperCase()} · ${d.sections.length} sections${d.lff?' · linked to lessons':''}</div></button><button class="mini" data-deldoc="${d.id}">${LIBDEL===d.id?'Delete?':'✕'}</button></li>`).join('')||'<li class="sub">No documents yet.</li>'}</ul>
+  <h3>Quick study</h3>`+bookHTML()}
+ b.innerHTML=h;const f=$('#libfile');if(f)f.onchange=()=>{if(f.files[0])importFile(f.files[0])}}
+$('#review').addEventListener('click',async e=>{if(REVTAB!=='book')return;const t=e.target.closest('[data-lib],[data-doc],[data-sec],[data-part],[data-deldoc]');if(!t)return;
+ if(t.dataset.doc){LIBSEL=t.dataset.doc;LIBSEC=null;BK.data=null;return renderLib()}
+ if(t.dataset.sec!=null){LIBSEC=+t.dataset.sec;LIBPART=0;BK.data=null;BK.err='';renderLib();$('#review').scrollTop=0;return}
+ if(t.dataset.part!=null){LIBPART=+t.dataset.part;BK.data=null;return renderLib()}
+ if(t.dataset.deldoc){const id=t.dataset.deldoc;if(LIBDEL!==id){LIBDEL=id;renderLib();setTimeout(()=>{LIBDEL=null},4000);return}await IDB.del(id);LIB=await IDB.all();LIBDEL=null;return renderLib()}
+ const a=t.dataset.lib;const d=LIB.find(x=>x.id===LIBSEL);
+ if(a==='up'){LIBSEL=null;BK.data=null;return renderLib()}
+ if(a==='sec'){LIBSEC=null;BK.data=null;return renderLib()}
+ const sec=d&&d.sections[LIBSEC],txt=sec?parts(sec.text)[LIBPART]:'';
+ if(a==='study'){BK.src=d.title+' — '+sec.label;return bookGo(txt)}
+ if(a==='learn'||a==='teach'){S.passage={title:d.title+' — '+sec.label,text:txt.slice(0,3000)};S.topic=a==='learn'?'bible':'teach';save();go('talk')}});
+/* kana */
+const kch=c=>S.script==='k'?toKata(c):c;
+const kstat=c=>S.kana[c]||{c:0,w:0};
+const mastery=c=>{const s=kstat(c);return s.c>=3&&s.c>=s.w*2?2:s.c>0?1:0};
+const pool=()=>ALLK.filter(k=>S.kanaRows.includes(k.row));
+function pickK(){const p=pool();const sc=k=>{const s=kstat(kch(k.h));return s.c-s.w*2+Math.random()*3};return p.sort((a,b)=>sc(a)-sc(b))[0]}
+function rowsHTML(){return `<div class="gh">Practice these rows</div><div class="rows">${ROWS.map(r=>`<button class="rw ${S.kanaRows.includes(r.id)?'on':''}" data-row="${r.id}">${kch(ROWLAB(r.id))}</button>`).join('')}<button class="rw" data-row="all" style="font-family:inherit">All</button></div>`}
+function renderKana(){const body=$('#rbody');if(!body)return;
+ let h=`<div class="seg" id="script"><button data-s="h" class="${S.script==='h'?'on':''}">ひらがな</button><button data-s="k" class="${S.script==='k'?'on':''}">カタカナ</button></div><div class="seg" id="kmode">${['chart','read','write','trace'].map(m=>`<button data-m="${m}" class="${kmode===m?'on':''}">${m[0].toUpperCase()+m.slice(1)}</button>`).join('')}</div>`;
+ if(kmode==='chart'){const sec=(ids,label)=>`<div class="gh">${label}</div><div class="grid">${ROWS.filter(r=>ids.includes(r.id)).flatMap(r=>{const cells=r.cells.map(c=>c?`<button class="kc m${mastery(kch(c.h))}" data-k="${c.h}"><b>${kch(c.h)}</b><small>${c.r}</small></button>`:'<div class="kc blank"></div>');while(cells.length<5)cells.push('<div class="kc blank"></div>');return cells}).join('')}</div>`;
+  body.innerHTML=h+sec(['a','k','s','t','n','h','m','y','r','w','nn'],'Basic sounds')+sec(['g','z','d','b','p'],'Voiced sounds (with ゛ and ゜)')+`<p class="foot">Amber dot: started. Green: mastered.</p>`;return}
+ if(kmode==='trace'){body.innerHTML=h;return renderTrace()}
+ if(!pool().length){body.innerHTML=h+rowsHTML()+'<p class="sub">Pick at least one row.</p>';return}
+ if(!quiz)quiz=newQuiz();const q=quiz,st=`<div class="qstat"><span>Streak ${q.streak||0}</span><span>${Math.min(40,S.kanaOK[S.script]||0)}/40 toward the practice step</span></div>`;
+ if(kmode==='read')body.innerHTML=h+rowsHTML()+`<div class="card">${st}<div class="big">${q.ch}</div><div class="opts">${q.opts.map(o=>`<button class="op" data-o="${o}" style="text-align:center">${o}</button>`).join('')}</div><div class="fb" id="kfb" style="text-align:center"></div></div>`;
+ else body.innerHTML=h+rowsHTML()+`<div class="card" style="text-align:center">${st}<div class="sub" style="margin:8px 0 0">Type this in ${S.script==='k'?'katakana':'hiragana'}</div><div class="prompt">${esc(q.rom)}</div><div class="sub">${q.en?esc(q.en):'&nbsp;'}</div><input class="ans" id="kans" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="${S.script==='k'?'カタカナ':'ひらがな'}"><div class="fb" id="kfb"></div><div class="tbar"><button class="btn alt" id="kskip">Show me</button><button class="btn" id="kchk">Check</button></div></div>`}
+function newQuiz(prev){const streak=prev?prev.streak:0;
+ if(kmode==='read'){const k=pickK(),ch=kch(k.h);const others=shuffle([...new Set(ALLK.map(x=>x.r).filter(r=>r!==k.r))]).slice(0,3);return{ch,ans:k.r,opts:shuffle([k.r,...others]),streak}}
+ const set=new Set(pool().map(k=>kch(k.h))),full=new Set(ALLK.map(k=>kch(k.h)));
+ const words=(S.script==='k'?WORDS_K:WORDS_H).filter(([w])=>[...w].every(c=>!full.has(c)||set.has(c)));
+ if(words.length&&Math.random()<.45){const [w,r,en]=words[Math.floor(Math.random()*words.length)];return{ans:w,rom:r,en,streak}}
+ const k=pickK();return{ans:kch(k.h),rom:k.r,en:'',streak}}
+function markK(chars,ok){for(const c of chars){if(!/[ぁ-ヶ]/.test(c))continue;const s=S.kana[c]=S.kana[c]||{c:0,w:0};ok?s.c++:s.w++}
+ if(ok){gain(1);const sc=S.script;S.kanaOK[sc]=(S.kanaOK[sc]||0)+1;if(S.kanaOK[sc]===40){const u=UBYID['n5-'+sc],st=stepsOf(u).find(x=>x.type==='kprac');if(!stepDone(u,st)){markStep(u,st,100);toast(`${u.t} practice step complete ✓ Take the ${u.t} test on the Path.`)}}}save()}
+$('#review').addEventListener('click',e=>{if(REVTAB!=='kana')return;
+ const sb=e.target.closest('#script button');if(sb){S.script=sb.dataset.s;save();quiz=null;return renderKana()}
+ const mb=e.target.closest('#kmode button');if(mb){kmode=mb.dataset.m;quiz=null;return renderKana()}
+ const row=e.target.closest('[data-row]');if(row){const id=row.dataset.row;S.kanaRows=id==='all'?(S.kanaRows.length===ROWS.length?['a']:ROWS.map(r=>r.id)):S.kanaRows.includes(id)?S.kanaRows.filter(x=>x!==id):[...S.kanaRows,id];save();quiz=null;return renderKana()}
+ const kc=e.target.closest('.kc[data-k]');if(kc){sayJa(kch(kc.dataset.k));traceIdx=ALLK.findIndex(k=>k.h===kc.dataset.k);return}
+ const op=e.target.closest('.op[data-o]');if(op&&quiz&&!quiz.done){quiz.done=true;const ok=op.dataset.o===quiz.ans;op.classList.add(ok?'good':'bad');if(!ok)document.querySelector(`.op[data-o="${quiz.ans}"]`).classList.add('good');
+  $('#kfb').className='fb '+(ok?'good':'bad');$('#kfb').textContent=ok?'正解! Correct':`It's “${quiz.ans}”`;sayJa(quiz.ch);markK([quiz.ch],ok);quiz.streak=ok?quiz.streak+1:0;setTimeout(()=>{quiz=newQuiz(quiz);renderKana()},ok?800:1600);return}
+ if(e.target.closest('#kchk'))return checkWrite();
+ if(e.target.closest('#kskip')&&quiz){$('#kfb').className='fb bad';$('#kfb').innerHTML=`<span class="kl" style="font-size:30px">${esc(quiz.ans)}</span>`;sayJa(quiz.ans);if(!quiz.missed)markK([...quiz.ans],false);quiz.streak=0;const b=$('#kskip');b.textContent='Next';b.id='knext';return}
+ if(e.target.closest('#knext')){quiz=newQuiz(quiz);renderKana();const a=$('#kans');a&&a.focus();return}
+ const ta=e.target.closest('[data-tr]');if(ta)traceAct(ta.dataset.tr)});
+function checkWrite(){if(!quiz)return;const a=$('#kans');const v=(a.value||'').trim().replace(/\s/g,'');if(!v)return;const want=quiz.ans;const ok=S.script==='k'?v===want:toHira(v)===want;const fb=$('#kfb');fb.className='fb '+(ok?'good':'bad');
+ if(ok){fb.textContent='正解! Correct';sayJa(want);markK([...want],true);quiz.streak++;setTimeout(()=>{quiz=newQuiz(quiz);renderKana();const n=$('#kans');n&&n.focus()},900)}
+ else{fb.textContent=S.script==='k'&&toKata(v)===want?'Right sound, but use katakana here.':'Not quite. Try again or tap “Show me”.';if(!quiz.missed){markK([...want],false);quiz.missed=true}quiz.streak=0}}
+let tctx=null,drawing=false,guide=true,tro=null;
+function renderTrace(){const k=ALLK[traceIdx]||ALLK[0],ch=kch(k.h);
+ $('#rbody').insertAdjacentHTML('beforeend',`<div class="card" style="text-align:center"><div class="sub" style="margin:0 0 8px">Trace <b class="kl" style="font-size:20px">${ch}</b> (${k.r}), then write it from memory with the guide off.</div><div class="trwrap"><canvas id="tg"></canvas><canvas id="tc"></canvas></div><div class="tbar"><button class="btn alt" data-tr="prev">‹</button><button class="btn alt" data-tr="hear">▶ Hear</button><button class="btn alt" data-tr="clear">Clear</button><button class="btn alt" data-tr="guide">${guide?'Hide':'Show'} guide</button><button class="btn" data-tr="next">›</button></div></div>`);
+ const g=$('#tg'),c=$('#tc');
+ const size=()=>{const r=c.getBoundingClientRect(),d=devicePixelRatio||1;if(!r.width)return;[g,c].forEach(x=>{x.width=r.width*d;x.height=r.height*d});tctx=c.getContext('2d');tctx.scale(d,d);tctx.lineCap='round';tctx.lineJoin='round';tctx.lineWidth=Math.max(8,r.width/28);tctx.strokeStyle=getComputedStyle(document.body).color;drawGuide(ch,r.width)};
+ if(tro)tro.disconnect();tro=new ResizeObserver(size);tro.observe(c);
+ document.fonts&&document.fonts.load('200px "Klee One"',ch).then(()=>{const w=c.getBoundingClientRect().width;w&&drawGuide(ch,w)}).catch(()=>{});
+ const pos=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+ c.onpointerdown=e=>{drawing=true;c.setPointerCapture(e.pointerId);const[x,y]=pos(e);tctx.beginPath();tctx.moveTo(x,y);tctx.lineTo(x+.1,y+.1);tctx.stroke()};
+ c.onpointermove=e=>{if(!drawing)return;const[x,y]=pos(e);tctx.lineTo(x,y);tctx.stroke()};
+ c.onpointerup=c.onpointercancel=()=>{drawing=false}}
+function drawGuide(ch,w){const g=$('#tg');if(!g)return;const x=g.getContext('2d'),d=devicePixelRatio||1;x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,w);
+ x.strokeStyle='rgba(217,61,39,.35)';x.setLineDash([6,6]);x.lineWidth=1;x.beginPath();x.moveTo(w/2,0);x.lineTo(w/2,w);x.moveTo(0,w/2);x.lineTo(w,w/2);x.stroke();x.setLineDash([]);
+ if(guide){x.fillStyle='rgba(120,130,150,.28)';x.font=`${w*.78}px "Klee One",serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(ch,w/2,w/2+w*.04)}}
+function traceAct(a){const c=$('#tc');if(a==='clear'&&tctx){tctx.clearRect(0,0,c.width,c.height);return}
+ if(a==='hear')return sayJa(kch(ALLK[traceIdx].h));if(a==='guide'){guide=!guide;return renderKana()}
+ if(a==='next'||a==='prev'){traceIdx=(traceIdx+(a==='next'?1:-1)+ALLK.length)%ALLK.length;renderKana();sayJa(kch(ALLK[traceIdx].h))}}
+
+/* ================= me ================= */
+let resetArm=false,AIBUSY=false,AIMSG='',IMPMSG='',INSTALLEV=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();INSTALLEV=e;if(view==='me')renderMe()});
+function renderMe(){const all=allItems(),u=curUnit(),jv=jaVoices();
+ const km=Object.keys(S.kana).filter(c=>mastery(c)===2).length;
+ let cumK=0,cumW=0;
+ const tg=LVS.map(lv=>{const its=lv.units.flatMap(x=>ITEMS[x.id]||[]);const w=its.filter(x=>x.t==='w').length,k=its.filter(x=>x.t==='k').length;return `<div class="tgt"><b>${lv.name}</b><div><div class="qstat"><span>${w} / ${lv.words} words · ${k} / ${lv.kanji} kanji</span><span>${lvDone(lv)}/${lv.units.length} units</span></div><div class="bar"><i style="width:${Math.min(100,(w/lv.words*70+k/lv.kanji*30))}%"></i></div></div></div>`}).join('');
+ $('#me').innerHTML=`<h2 class="t">Your progress</h2><p class="sub">Now: ${u.lv.name} · ${esc(u.t)} · conversation stage ${stage()} (${ST().mix}% Japanese)</p>
+ <div class="stats"><div class="st"><b>${S.xp}</b><span>XP</span></div><div class="st"><b>${streak()}</b><span>day streak</span></div><div class="st"><b>${all.filter(x=>x.t==='w').length}</b><span>words in review</span></div><div class="st"><b>${all.filter(x=>x.t==='k').length}</b><span>kanji learned</span></div><div class="st"><b>${km}</b><span>kana mastered</span></div><div class="st"><b>${S.stats.jp}</b><span>replies in Japanese</span></div></div>
+ <h3>JLPT targets</h3><p class="sub" style="margin:0 0 4px">Approximate new words and kanji each level adds. The bar mixes both.</p>${tg}
+ <h3 id="aibox">Your AI</h3>
+ <p class="sub" style="margin:0 0 4px">Lessons and conversations use your own AI account. Your key is stored only on this device and sent only to your provider.</p>
+ <div class="set"><label for="aiprov">Provider</label><select id="aiprov">${Object.entries(PROV).map(([k,v])=>`<option value="${k}" ${AI.provider===k?'selected':''}>${v.name}</option>`).join('')}</select></div>
+ ${AI.provider==='custom'?`<div class="set"><label for="aibase">Server URL<small>OpenAI-compatible, ending in /v1 (e.g. http://localhost:11434/v1 for Ollama)</small></label><input type="text" id="aibase" value="${esc(AI.base)}" placeholder="https://…/v1"></div>`:''}
+ <div class="set"><label for="aikey">API key<small>${PROV[AI.provider].keyUrl?`Get one at <a href="${PROV[AI.provider].keyUrl}" target="_blank" rel="noopener">${PROV[AI.provider].keyUrl.replace('https://','')}</a>`:'Leave blank if your server needs none'}</small></label><input type="password" id="aikey" value="${esc(AI.key)}" autocomplete="off" placeholder="paste key"></div>
+ <div class="set"><label>Models<small>${AI.models.length?AI.models.length+' available':'Load the list after entering your key'}</small></label><button class="btn alt" id="aiload">${AIBUSY?'Loading…':'Load models'}</button></div>
+ <datalist id="aimodels">${AI.models.map(m=>`<option value="${esc(m)}">`).join('')}</datalist>
+ <div class="set"><label for="aismart">Lesson model<small>Writes lessons, scenes and tests: pick a capable one</small></label><input type="text" id="aismart" list="aimodels" value="${esc(AI.smart)}" placeholder="model id"></div>
+ <div class="set"><label for="aifast">Chat model<small>For quick replies; can be a faster, cheaper one</small></label><input type="text" id="aifast" list="aimodels" value="${esc(AI.fast)}" placeholder="same as lesson model"></div>
+ <div class="set"><label>${aiReady()?'Ready':'Not set up yet'}<small>${esc(AIMSG)}</small></label><button class="btn" id="aitest" ${aiReady()?'':'disabled'}>Test</button></div>
+ <h3>Backup &amp; devices</h3>
+ <p class="sub" style="margin:0 0 4px">Progress is saved on this device. Use a backup file to move it to another phone or tablet, or to bring progress over from the Claude version.</p>
+ <div class="nav2"><button class="btn alt" id="bexp">Export backup</button><label class="btn alt" style="flex:1">Import backup<input type="file" id="bimpf" accept=".json,application/json" hidden></label></div>
+ <textarea id="bimpt" class="search" placeholder="…or paste backup text here" style="min-height:60px"></textarea><div class="nav2" style="margin-top:0"><button class="btn alt" id="bimp">Import pasted backup</button></div>
+ ${IMPMSG?`<p class="foot">${esc(IMPMSG)}</p>`:''}
+ ${matchMedia('(display-mode: standalone)').matches?'':`<h3>Install on your phone</h3><p class="sub">${INSTALLEV?'':'iPhone/iPad: open this page in Safari, tap Share, then “Add to Home Screen”. Android: Chrome menu › “Install app”.'}</p>${INSTALLEV?'<button class="btn wide" id="binstall">Install Hanasō</button>':''}`}
+ <h3>Settings</h3>
+ <div class="set"><label for="stutor">Tutor's name<small>English and Japanese (the seal shows the first kana)</small></label><span style="display:flex;gap:6px;max-width:55%"><input type="text" id="stutor" value="${esc(S.set.tutor)}" style="max-width:50%"><input type="text" id="stutorja" lang="ja" value="${esc(S.set.tutorJa)}" style="max-width:50%"></span></div>
+ <div class="set"><label for="sname">Your name<small>What ${esc(TN())} calls you</small></label><input type="text" id="sname" value="${esc(S.set.name)}" placeholder="Jon"></div>
+ <div class="set"><label>Speak replies aloud<small>${esc(TN())} reads each reply automatically</small></label><button class="sw ${S.set.auto?'on':''}" id="sauto" aria-label="Toggle auto-speak"></button></div>
+ <div class="set"><label for="srate">Speaking speed<small>${S.set.rate.toFixed(2)}× (listening scenes also speed up by level)</small></label><input type="range" id="srate" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
+ <div class="set"><label for="svoice">${esc(TN())}'s voice<small>${jv.length?'Female Japanese voices are picked first':'No Japanese voice on this device; add one in your phone’s speech settings'}</small></label><select id="svoice"><option value="">Auto (female)</option>${jv.map(v=>`<option value="${esc(v.voiceURI)}" ${v.voiceURI===S.set.voice?'selected':''}>${esc(v.name)}</option>`).join('')}</select></div>
+ <div class="set"><label for="sromaji">Romaji<small>Latin-letter spelling under Japanese</small></label><select id="sromaji">${['auto','on','off'].map(o=>`<option ${S.set.romaji===o?'selected':''} value="${o}">${o==='auto'?'Auto (early N5)':o==='on'?'Always':'Never'}</option>`).join('')}</select></div>
+ <div class="set"><label for="seng">English translations<small>Hidden until tapped when off</small></label><select id="seng">${['auto','on','off'].map(o=>`<option ${S.set.english===o?'selected':''} value="${o}">${o==='auto'?'Auto (early N5)':o==='on'?'Always show':'Tap to reveal'}</option>`).join('')}</select></div>
+ <div class="set"><label>Furigana<small>Small readings above kanji</small></label><button class="sw ${S.set.furi?'on':''}" id="sfuri" aria-label="Toggle furigana"></button></div>
+ <div class="set"><label for="slock">Conversation mix<small>Follows your unit, or pin a stage</small></label><select id="slock"><option value="0">Automatic</option>${STAGES.map((x,i)=>`<option value="${i+1}" ${S.set.lock===i+1?'selected':''}>${i+1}: ${x.name} (${x.mix}%)</option>`).join('')}</select></div>
+ <div class="set"><label>Reset all progress<small>${resetArm?'Tap again to erase everything':'Units, cards, conversations'}</small></label><button class="btn alt" id="sreset" style="${resetArm?'background:var(--red);color:#fff':''}">${resetArm?'Confirm':'Reset'}</button></div>
+ <p class="foot">${DICT?'The mic button uses your device’s speech recognition in Japanese.':'Voice input: use the microphone on your phone’s keyboard; Japanese keyboard dictation works too.'}</p>`}
+$('#me').addEventListener('click',async e=>{const id=e.target.id;
+ if(id==='aiload'){if(AIBUSY)return;AIBUSY=true;AIMSG='';renderMe();try{const ids=await listModels();AI.models=ids.sort();const g=guessModels(AI.models);if(!AI.smart||!AI.models.includes(AI.smart))AI.smart=g.smart;if(!AI.fast||!AI.models.includes(AI.fast))AI.fast=g.fast;AIMSG=`Loaded ${ids.length} models. Suggested picks filled in; change them if you like.`}catch(er){AIMSG=errText(er)}AIBUSY=false;saveAI();refreshAI();return renderMe()}
+ if(id==='aitest'){AIMSG='Testing…';renderMe();try{const r=await aiJSON('Reply with JSON {"ok":true,"jp":"こんにちは"} only.','fast');AIMSG=r&&r.ok?'Connected ✓ '+(r.jp||''):'Connected, but the reply was unexpected.'}catch(er){AIMSG=errText(er)+(er&&er.message?' ('+String(er.message).slice(0,120)+')':'')}return renderMe()}
+ if(id==='bexp'){const json=JSON.stringify({app:'hanaso',v:2,at:Date.now(),state:S,items:ITEMS});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download='hanaso-backup-'+today()+'.json';document.body.appendChild(a);a.click();a.remove();IMPMSG='Backup file created.';return renderMe()}
+ if(id==='bimp'){return doImport(($('#bimpt')||{}).value||'')}
+ if(id==='binstall'&&INSTALLEV){INSTALLEV.prompt();INSTALLEV=null;return}
+ if(id==='sauto')S.set.auto=!S.set.auto;else if(id==='sfuri'){S.set.furi=!S.set.furi;renderHead()}
+ else if(id==='sreset'){if(!resetArm){resetArm=true;renderMe();setTimeout(()=>{resetArm=false;view==='me'&&renderMe()},4000);return}
+  const keep=S.set;S=fresh();S.set=keep;Object.keys(ITEMS).forEach(b=>{ITEMS[b]=[];saveBucket(b)});resetArm=false;renderHead();toast('Progress reset.')}
+ else return;save();renderMe()});
+function doImport(txt){try{const o=JSON.parse(String(txt).trim());if(!o||o.app!=='hanaso'||!o.state||o.state.v!==2)throw 0;
+  S=Object.assign(fresh(),o.state,{set:Object.assign(freshSet(),o.state.set||{})});ITEMS=o.items||{};S.buckets=Object.keys(ITEMS);if(!S.buckets.includes('talk'))S.buckets.push('talk');save();S.buckets.forEach(b=>{ITEMS[b]=ITEMS[b]||[];saveBucket(b)});
+  IMPMSG=`Imported: ${Object.keys(S.unitPass).length} units passed, ${allItems().length} review cards.`;renderHead();renderMe()}catch(e){IMPMSG='That isn’t a Hanasō backup.';renderMe()}}
+$('#me').addEventListener('change',e=>{const t=e.target;
+ if(t.id==='bimpf'&&t.files[0]){t.files[0].text().then(doImport);return}
+ if(['aiprov','aikey','aibase','aismart','aifast'].includes(t.id)){if(t.id==='aiprov'){AI.provider=t.value;AI.models=[];AI.smart='';AI.fast='';AIMSG=''}if(t.id==='aikey')AI.key=t.value.trim();if(t.id==='aibase')AI.base=t.value.trim();if(t.id==='aismart')AI.smart=t.value.trim();if(t.id==='aifast')AI.fast=t.value.trim();saveAI();refreshAI();return renderMe()}
+ if(t.id==='sname')S.set.name=t.value.trim().slice(0,30);
+ if(t.id==='stutor')S.set.tutor=t.value.trim().slice(0,20)||'Yuki';
+ if(t.id==='stutorja')S.set.tutorJa=t.value.trim().slice(0,10)||'ゆき';
+ if(t.id==='srate'){S.set.rate=+t.value;sayJa('こんにちは、ゆきです。')}
+ if(t.id==='svoice'){S.set.voice=t.value;sayJa('こんにちは、ゆきです。よろしくお願いします。')}
+ if(t.id==='sromaji')S.set.romaji=t.value;if(t.id==='seng')S.set.english=t.value;
+ if(t.id==='slock'){S.set.lock=+t.value}
+ save();renderHead();renderMe()});
+
+/* ================= boot ================= */
+renderHead();renderPath();
+refreshAI();
+DICT=makeDict();
+if(DICT){$('#mic').hidden=false;
+ DICT.onPartial(({text})=>{$('#box').value=(micBase+' '+text).trim();grow()});
+ DICT.onFinal(({text})=>{micBase=(micBase+' '+text).trim();$('#box').value=micBase;grow()});
+ DICT.onState(({state})=>{listening=state==='listening';$('#mic').classList.toggle('live',listening)})}
+IDB.all().then(d=>{LIB=d||[]}).catch(()=>{});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+try{if(!localStorage.getItem('hanaso-welcome')){localStorage.setItem('hanaso-welcome','1');setTimeout(()=>toast('Welcome! Start with kana on the Path, and set up your AI in Progress › Your AI.'),600)}}catch(e){}
+}
+</script>
+</body>
+</html>
