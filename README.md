@@ -32,3 +32,6 @@ Progress, review cards and imported documents are stored only on your device. Us
 
 ## Developing
 Plain HTML/CSS/JS, no build step. `index.html` is the whole app, `sw.js` makes it work offline, and pushing to `main` updates the live app via GitHub Pages.
+
+## Credits
+Stroke-order data for kana tracing comes from [KanjiVG](https://kanjivg.tagaini.net) by Ulrich Apel, licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/).
