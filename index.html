@@ -288,8 +288,8 @@ h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
 
 <nav id="nav">
   <button data-v="path" class="on"><b>学</b>Path</button>
-  <button data-v="talk"><b>話</b>Talk</button>
   <button data-v="review"><b>復</b>Review</button>
+  <button data-v="talk"><b>話</b>Talk</button>
   <button data-v="me"><b>私</b>Progress</button>
 </nav>
 <div class="toast" id="toast"></div>
@@ -475,18 +475,18 @@ const showEnglish=()=>S.set.english==='on'||(S.set.english==='auto'&&stage()<=2)
 function markDay(){const d=today();if(!S.days.includes(d)){S.days.push(d);S.days=S.days.slice(-90)}}
 function streak(){let n=0,d=new Date();for(;;){const k=d.toISOString().slice(0,10);if(S.days.includes(k)){n++;d=new Date(d-DAY)}else if(n===0&&k===today()){d=new Date(d-DAY)}else break}return n}
 function gain(x){S.xp+=x;markDay()}
-function stepLabel(s){return{words:`Words & kanji ${s.i+1}`,grammar:`Grammar: ${(s.pts||[]).join(' · ')}`,listen:`Listening scene ${s.i+1}`,study:`Bible lesson ${String(s.n).padStart(2,'0')}: ${LFF[s.n-1]?LFF[s.n-1][1]||LFF[s.n-1][0]:''}`,talk:'Conversation practice',test:'Unit test',klearn:'Learn the chart & trace',kdrill:'Kana drill',kprac:'Practice reading & writing',ktest:'Kana test'}[s.type]}
+function stepLabel(s){return{words:`Words & kanji ${s.i+1}`,grammar:`Grammar: ${(s.pts||[]).join(' · ')}`,listen:`Listening scene ${s.i+1}`,study:`Bible lesson ${String(s.n).padStart(2,'0')}: ${LFF[s.n-1]?LFF[s.n-1][1]||LFF[s.n-1][0]:''}`,talk:'Conversation practice',test:'Unit test',klearn:'Learn the chart & trace',kdrill:'Kana drill',miss:'Missed material',kprac:'Practice reading & writing',ktest:'Kana test'}[s.type]}
 function stepSub(s,u){const lv=u.lv;switch(s.type){
  case 'words':{const ks=lv.id==='n5'?kanjiForSet(u,s.i):[];return `${lv.wc} words${ks.length?' · kanji '+ks.join(' '):lv.kc?' · '+lv.kc+' kanji':''}`}
  case 'grammar':return 'Patterns, examples, drill';
  case 'listen':return `${lv.genres[s.i%lv.genres.length]} · comprehension questions`;
  case 'study':return `${u.li<=2?'Simplified to '+lv.name+' level':'Full register'} · listen, answer, review in Japanese`;
  case 'talk':return `Chat with ${TN()} using this unit (5 replies)`;
- case 'test':return '10 questions · pass with 8';
+ case 'test':return '10 questions · pass with 100%';
  case 'klearn':return 'Tap letters to hear them, trace them';
  case 'kprac':return `Read and write quizzes · ${Math.min(40,S.kanaOK[u.kana]||0)}/40 correct`;
  case 'kdrill':return `All ${ALLK.length} letters · pick the reading`;
- case 'ktest':return `Type all ${ALLK.length} letters · pass with ${Math.ceil(ALLK.length*.85)}`}return ''}
+ case 'ktest':return `Type all ${ALLK.length} letters · pass with 100%`}return ''}
 function markStep(u,s,score){const k=skey(u,s);S.done[k]=Math.max(S.done[k]||0,score);save()}
 
 const TN=()=>S.set.tutor||'Yuki';
@@ -582,6 +582,7 @@ function renderPath(){
  <h3>${allDone?'You have finished the course. おめでとう!':`${esc(u.lv.name)} · ${esc(u.kana?u.t:'Unit '+u.num+': '+u.t)}`}</h3><p class="sub">${esc(u.jp||'')}</p>
  <ol class="plan">${due?`<li><b>1</b><span>Review ${due} card${due>1?'s':''} <small style="opacity:.7">(~${Math.max(2,Math.round(due/3))} min)</small></span></li>`:''}${allDone?'':`<li><b>${due?2:1}</b><span>${esc(stepLabel(s))}</span></li>`}</ol>
  <div class="row">${due?`<button class="btn" data-act="rev">Review ${due}</button>`:''}${allDone?'':`<button class="btn ${due?'alt':''}" data-act="next">${due?'Then: ':'Start: '}${esc(stepLabel(s).split(':')[0])}</button>`}<button class="btn alt" data-u="${u.id}">Unit</button></div></div>`;
+ h+=missHTML();
  if(!aiReady())h+=`<div class="notice" style="margin:0 0 14px">Kana and review work now. Lessons and conversation need your own AI. <button class="mini" data-goai="1">Set up your AI ›</button></div>`;
  h+=LVS.map(lv=>{const d=lvDone(lv),tot=lv.units.length,isCur=lv===u.lv,pass=S.levelPass[lv.id]!=null||d===tot;
   const open=S.open===lv.id;
@@ -589,7 +590,7 @@ function renderPath(){
   let x=`<section class="lvl ${isCur?'cur':''} ${pass?'pass':''}"><div class="lh" role="button" tabindex="0" data-open="${lv.id}"><div class="badge">${lv.name}</div><div class="w"><div class="tline"><b>${esc(lv.title)}</b>${pass?rstBtn('lv:'+lv.id):''}</div><small>${d}/${tot} units · ~${lv.kanji} kanji · ~${lv.words} words</small><div class="bar ${pass?'ok':''}"><i style="width:${d/tot*100}%"></i></div></div><span aria-hidden="true">${open?'▾':'▸'}</span></div>`;
   if(open){x+=`<div class="ulist">${lv.units.map(un=>{const p=passed(un),c=un===u,lk=!unlocked(un);const st=stepsOf(un),dn=st.filter(s=>stepDone(un,s)).length;
     return `<button class="urow" data-u="${un.id}" ${lk?'disabled':''}><span class="ust ${p?'done':c?'cur':''}">${p?'✓':lk?'·':un.num||'あ'}</span><div class="w"><b>${esc(un.t)}</b><small>${esc(un.jp)} · ${p?'passed'+(S.unitPass[un.id]!=null?' '+S.unitPass[un.id]+'%':''):lk?'locked':`${dn}/${st.length} steps`}</small></div></button>`}).join('')}
-   <button class="urow" data-exam="${lv.id}" ${unlocked(first)?'':'disabled'}><span class="ust ${S.levelPass[lv.id]!=null?'done':''}">${S.levelPass[lv.id]!=null?'✓':'試'}</span><div class="w"><b>${lv.name} level exam</b><small>${S.levelPass[lv.id]!=null?'passed '+S.levelPass[lv.id]+'%':d===tot?'20 questions · pass with 70%':'Already know this level? Pass to test out'}</small></div></button></div>`}
+   <button class="urow" data-exam="${lv.id}" ${unlocked(first)?'':'disabled'}><span class="ust ${S.levelPass[lv.id]!=null?'done':''}">${S.levelPass[lv.id]!=null?'✓':'試'}</span><div class="w"><b>${lv.name} level exam</b><small>${S.levelPass[lv.id]!=null?'passed '+S.levelPass[lv.id]+'%':d===tot?'20 questions · pass with 100%':'Already know this level? Pass to test out'}</small></div></button></div>`}
   return x+'</section>'}).join('');
  h+=`<p class="foot">Each step is one 15–20 minute session. Units unlock in order; pass a unit test to move on, and pass a level exam to finish a level or test out of it.</p>`;
  el.innerHTML=h}
@@ -610,6 +611,7 @@ function doReset(k){const [kind,id]=[k.slice(0,k.indexOf(':')),k.slice(k.indexOf
 $('#path').addEventListener('click',e=>{const rb=e.target.closest('[data-reset]');if(rb){e.stopPropagation();const k=rb.dataset.reset;if(RSTARM!==k){RSTARM=k;renderPath();clearTimeout(rstBtn.t);rstBtn.t=setTimeout(()=>{RSTARM=null;view==='path'&&renderPath()},4000);return}RSTARM=null;doReset(k);return renderPath()}
  const od=e.target.closest('[data-open]');if(od){S.open=S.open===od.dataset.open?'':od.dataset.open;save();return renderPath()}
  const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.act==='miss')return openMiss();
  if(t.dataset.act==='rev'){REVTAB='items';go('review');startReview();return}
  if(t.dataset.act==='next'){const u=curUnit();openStep(u,nextStep(u));return}
  if(t.dataset.act==='pback'){PSEL=null;return renderPath()}
@@ -685,8 +687,8 @@ function openStep(u,s){
  if(s.type==='talk'){S.topic='unit';save();go('talk');return}
  LZ={u,s,phase:'loading',i:0};go('lesson');
  if(s.type==='ktest'){const kk=u.kana==='k';const tip={'ぢ':' (ち row + ゛)','づ':' (つ row + ゛)','じ':' (し row + ゛)','ず':' (す row + ゛)'};
-  const qs=shuffle(ALLK).map(k=>{const ch=kk?toKata(k.h):k.h;return{kind:'type',exact:true,ph:kk?'カタカナ':'ひらがな',promptHTML:`<span class="wbig">${esc(k.r)}</span>`,sub:`Type it in ${kk?'katakana':'hiragana'}${tip[k.h]||''}`,accept:[ch],reveal:`<span class="kl" style="font-size:44px">${ch}</span>`,sayAfter:ch}});
-  LZ.phase='quiz';startQuiz(qs,{pass:Math.ceil(qs.length*.85),onDone:(r,t)=>finishTest(r,t)});return}
+  const qs=shuffle(ALLK).map(k=>{const ch=kk?toKata(k.h):k.h;return{kind:'type',exact:true,ph:kk?'カタカナ':'ひらがな',promptHTML:`<span class="wbig">${esc(k.r)}</span>`,sub:`Type it in ${kk?'katakana':'hiragana'}${tip[k.h]||''}`,accept:[ch],reveal:`<span class="kl" style="font-size:44px">${ch}</span>`,sayAfter:ch,mk:{t:'kana',ch,r:k.r,h:k.h,sc:u.kana}}});
+  LZ.phase='quiz';startQuiz(qs,{pass:qs.length,onDone:(r,t)=>finishTest(r,t)});return}
  if(s.type==='kdrill'){const pool=shuffle(ALLK);
   const qs=pool.map(k=>{const ch=u.kana==='k'?toKata(k.h):k.h;const others=distract(k.r);const c=shuffle([k.r,...others]);return{kind:'mc',promptHTML:`<span class="kbig">${ch}</span>`,choices:c,answer:c.indexOf(k.r),sayAfter:ch,plainChoices:true}});
   LZ.phase='quiz';startQuiz(qs,{onDone:(r,t)=>{const pct=Math.round(r/t*100);markStep(u,s,pct);gain(5+Math.round(pct/10));LZ.phase='done';LZ.score=pct;renderLesson()}});return}
@@ -700,7 +702,7 @@ async function loadStep(regen){const {u,s}=LZ;LZ.phase='loading';LZ.err=null;ren
   if(s.type==='words'){if(!Array.isArray(d.words)||!d.words.length)throw{code:'invalid_json'};LZ.cards=[...(d.kanji||[]).filter(k=>k&&k.k).map(k=>({t:'k',...k})),...d.words.filter(w=>w&&w.jp).map(w=>({t:'w',...w}))];LZ.phase='cards';renderLesson();speakCard()}
   else if(s.type==='grammar'){if(!Array.isArray(d.points))throw{code:'invalid_json'};LZ.phase='learn';renderLesson()}
   else if(s.type==='listen'||s.type==='study'){if(!Array.isArray(d.lines)||!d.lines.length)throw{code:'invalid_json'};LZ.phase='listen';const lq=normQs(d.questions);if(!lq.length){LZ.phase='review';LZ.score=100;finishListen();return}startQuiz(lq,{embed:true,onDone:(r,t)=>{LZ.phase='review';LZ.score=Math.round(r/t*100);finishListen()}})}
-  else if(s.type==='test'){const qs=normQs(d.questions).slice(0,10);if(qs.length<5)throw{code:'invalid_json'};LZ.phase='quiz';startQuiz(qs,{pass:Math.ceil(qs.length*.8),onDone:(r,t)=>finishTest(r,t)})}
+  else if(s.type==='test'){const qs=normQs(d.questions).slice(0,10);if(qs.length<5)throw{code:'invalid_json'};LZ.phase='quiz';startQuiz(qs,{pass:qs.length,onDone:(r,t)=>finishTest(r,t)})}
  }catch(e){LZ.phase='error';LZ.err=e;renderLesson()}}
 function errText(e){const c=e&&e.code;return c==='no_sample'?'Lessons are written by your AI. Set up your AI provider and key in Progress › Your AI.':c==='bad_key'?'Your AI key was rejected. Check it in Progress › Your AI.':c==='bad_model'?'That AI model wasn’t found. Pick another in Progress › Your AI.':c==='network'?'Couldn’t reach your AI provider. Check your connection.':c==='not_ready'?'Still starting up. Try again in a moment.':c==='rate_limited'?'Too many requests right now. Wait a minute and try again.':c==='session_expired'?'Your Claude session expired. Sign in again.':TN()+' couldn’t prepare this lesson. Try again.'}
 
@@ -740,7 +742,7 @@ function finishWords(r,t){const {u,s,data}=LZ;const pct=Math.round(r/t*100);
 function finishGrammar(r,t){const {u,s}=LZ;const pct=Math.round(r/t*100);markStep(u,s,pct);gain(10+Math.round(pct/5));LZ.phase='done';LZ.score=pct;renderLesson();prefetch(u)}
 function finishListen(){LZ.rev=(LZ.data.review||[]).filter(r=>r&&r.q);const {u,s,data}=LZ;const pct=LZ.score;const n=addItems(u.id,(data.vocab||[]).filter(v=>v&&v.jp).map(v=>({t:'w',jp:v.jp,reading:v.reading||reading(v.jp),romaji:v.romaji||'',en:v.en||''})));
  markStep(u,s,pct);gain(10+Math.round(pct/5)+n*2);renderLesson();prefetch(u)}
-function finishTest(r,t){const {u,s}=LZ;const pct=Math.round(r/t*100),ok=r>=QZ.pass;LZ.phase='result';LZ.score=pct;LZ.passed=ok;
+function finishTest(r,t){const {u,s}=LZ;recordMisses(u.id,u.t);const pct=Math.round(r/t*100),ok=r>=QZ.pass;LZ.phase='result';LZ.score=pct;LZ.passed=ok;
  markStep(u,s,pct);
  if(ok){const first=S.unitPass[u.id]==null;S.unitPass[u.id]=Math.max(S.unitPass[u.id]||0,pct);if(first){gain(50);const nu=UNITS[u.gi+1];toast(`<b>${esc(u.t)} passed!</b><br>${u===u.lv.units.at(-1)?`Take the ${u.lv.name} exam to finish the level.`:nu?'Next: '+esc(nu.t):''}`)}save();renderHead();const nu=curUnit();if(nu!==u)prefetch(nu)}
  else{S.attempts[u.id]=(S.attempts[u.id]||1)+(s.type==='test'?1:0);save()}
@@ -748,11 +750,24 @@ function finishTest(r,t){const {u,s}=LZ;const pct=Math.round(r/t*100),ok=r>=QZ.p
 function openExam(lv){const a=S.attempts['exam-'+lv.id]||1;LZ={u:{lv,id:'exam-'+lv.id,t:lv.name+' exam',jp:'模擬試験'},s:{id:'exam',type:'exam'},exam:lv,phase:'loading'};go('lesson');loadExam(lv,a)}
 async function loadExam(lv,a){LZ.phase='loading';LZ.err=null;renderLesson();
  try{const d=await generate(examPrompt(lv,a));const qs=normQs(d&&d.questions).slice(0,20);if(qs.length<10)throw{code:'invalid_json'};LZ.phase='quiz';
-  startQuiz(qs,{pass:Math.ceil(qs.length*.7),onDone:(r,t)=>{const pct=Math.round(r/t*100),ok=r>=QZ.pass;LZ.phase='result';LZ.score=pct;LZ.passed=ok;
+  startQuiz(qs,{pass:qs.length,onDone:(r,t)=>{recordMisses('exam-'+lv.id,lv.name+' exam');const pct=Math.round(r/t*100),ok=r>=QZ.pass;LZ.phase='result';LZ.score=pct;LZ.passed=ok;
    if(ok){const first=S.levelPass[lv.id]==null;S.levelPass[lv.id]=Math.max(S.levelPass[lv.id]||0,pct);if(first){gain(200);toast(`<b>${lv.name} complete!</b> 合格おめでとう!`)}}else S.attempts['exam-'+lv.id]=a+1;
    save();renderHead();renderLesson()}})}
  catch(e){LZ.phase='error';LZ.err=e;renderLesson()}}
 
+/* missed material */
+function recordMisses(src,title){S.miss=S.miss||[];QZ.qs.forEach((q,i)=>{if(QZ.res[i])return;
+  const it=q.mk?{...q.mk}:{t:'q',q:{kind:q.kind,promptHTML:q.promptHTML,sub:q.sub||'',passage:q.passage||'',audio:q.audio||'',choices:q.choices,answer:q.answer,accept:q.accept,exact:q.exact,ph:q.ph,reveal:q.reveal||'',why:q.why||'',plainChoices:!!q.plainChoices,section:q.section||''}};
+  it.key=it.t==='kana'?'k:'+it.ch:'q:'+(q.promptHTML||'').slice(0,120)+(q.passage||'').slice(0,40);if(S.miss.some(m=>m.key===it.key))return;
+  it.id='m'+Date.now().toString(36)+i;it.src=src;it.title=title;it.ok=0;S.miss.push(it)});if(S.miss.length>300)S.miss=S.miss.slice(-300);save()}
+function missQuestion(m){if(m.t==='kana'){const kk=m.sc==='k';return Math.random()<.5?{kind:'type',exact:true,ph:kk?'カタカナ':'ひらがな',promptHTML:`<span class="wbig">${esc(m.r)}</span>`,sub:`Type it in ${kk?'katakana':'hiragana'}`,accept:[m.ch],reveal:`<span class="kl" style="font-size:44px">${m.ch}</span>`,sayAfter:m.ch,mid:m.id}
+  :(()=>{const c=shuffle([m.r,...distract(m.r)]);return{kind:'mc',promptHTML:`<span class="kbig">${m.ch}</span>`,choices:c,answer:c.indexOf(m.r),sayAfter:m.ch,plainChoices:true,mid:m.id}})()}
+ const q={...m.q,mid:m.id};if(q.kind==='mc'&&q.choices){const idx=shuffle(q.choices.map((_,i)=>i));q.answer=idx.indexOf(q.answer);q.choices=idx.map(i=>m.q.choices[i])}return q}
+function openMiss(){const list=shuffle(S.miss||[]).slice(0,20);if(!list.length){toast('Nothing to fix. Nice work!');return}
+ LZ={u:{lv:curUnit().lv,id:'miss',t:'Missed material',jp:'ミスの復習'},s:{id:'miss',type:'miss'},phase:'quiz'};go('lesson');
+ startQuiz(list.map(missQuestion),{onDone:(r,t)=>{let cleared=0;QZ.qs.forEach((q,i)=>{const m=S.miss.find(x=>x.id===q.mid);if(!m)return;if(QZ.res[i]){m.ok++;if(m.ok>=2){S.miss=S.miss.filter(x=>x!==m);cleared++}}else m.ok=0});gain(r);save();renderHead();LZ.phase='done';LZ.score=Math.round(r/t*100);LZ.cleared=cleared;renderLesson()}})}
+function missHTML(){const ms=S.miss||[];if(!ms.length)return'';const by={};ms.forEach(m=>{by[m.title]=(by[m.title]||0)+1});
+ return `<div class="card" style="border:2px solid var(--red);margin-bottom:14px"><div class="tline"><b style="font-size:18px">Missed material</b><span class="pill red">${ms.length} to fix</span></div><p class="sub" style="margin:4px 0 10px">Things you missed on tests: ${Object.entries(by).map(([k,v])=>esc(k)+' ('+v+')').join(', ')}. Get each one right twice to clear it.</p><button class="btn wide" data-act="miss">Drill missed material</button></div>`}
 function renderLesson(){const el=$('#lesson');if(!LZ){el.innerHTML='';return}
  const {u,s}=LZ;
  let h=`<button class="back" data-act="lback">‹ ${u.lv.name}${u.num?' · Unit '+u.num:''}</button><div class="pill">${esc(stepLabel(s)||'Level exam')}</div>`;
@@ -771,13 +786,14 @@ function renderLesson(){const el=$('#lesson');if(!LZ){el.innerHTML='';return}
   <button class="play" data-act="lplay"><svg><use href="#playi"/></svg><span>Play the scene<small>${(d.cast||[]).map(c=>esc(c.name)).join(' · ')} · speed ${u.lv.rate}×</small></span></button>`;
   if(LZ.phase==='listen'){h+=`<p class="sub">Listen first, without reading. Replay as often as you need, then answer.</p>`+quizHTML()+`<p style="text-align:center"><button class="mini" data-act="lpeek">Stuck? Show the transcript</button></p>`;if(LZ.peek)h+=transcriptHTML(d)}
   else h+=`<div class="card" style="text-align:center;margin:12px 0"><div class="score">${LZ.score}%</div><div class="sub" style="margin:0">comprehension</div></div><h3>Transcript</h3><p class="sub">Tap a line to hear it again.</p>`+transcriptHTML(d)+`${isB&&d.matome?`<h3>まとめ</h3><div class="ex" data-say="${esc(plain(d.matome))}"><div class="jt">${ruby(d.matome)}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(d.matomeEn||'')}</div></div>`:''}${isB&&(LZ.rev||[]).length?`<h3>復習: answer in Japanese</h3><p class="sub">Say or type your answer first, then compare with the model.</p>${LZ.rev.map((r,i)=>`<div class="card" style="margin-bottom:10px"><div class="jt" style="font-size:18px" data-say="${esc(plain(r.q))}">${ruby(r.q)}</div><textarea class="search" style="margin:8px 0;min-height:70px" lang="ja" data-rv="${i}" placeholder="日本語で答えてみましょう">${esc(r.mine||'')}</textarea>${r.show?`<div class="ex" data-say="${esc(plain(r.model))}"><div class="jt">${ruby(r.model||'')}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(r.en||'')}</div></div>`:`<button class="btn alt" data-act="rvshow" data-i="${i}">Show model answer</button>`}</div>`).join('')}<button class="btn blue wide" data-act="teachit">Practice teaching this lesson to ${esc(TN())} ›</button>`:''}${(d.vocab||[]).length?`<h3>Key words (added to review)</h3><div class="vocab">${d.vocab.map(v=>`<span class="vc">${ruby(v.jp)} · ${esc(v.en)}</span>`).join('')}</div>`:''}<div class="nav2"><button class="btn alt" data-act="lback">Back to unit</button><button class="btn" data-act="nextstep">Next step ›</button></div>`;
+ }else if(s.type==='miss'){h+=LZ.phase==='quiz'?`<h2 class="t" style="margin-top:8px">Missed material</h2><p class="sub">Each item clears after you get it right twice.</p>`+quizHTML():`<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px"><use href="#seal"/></svg><div class="score">${LZ.score}%</div><p class="sub" style="margin:0">${LZ.cleared} cleared · ${(S.miss||[]).length} still to fix</p></div><div class="nav2"><button class="btn alt" data-act="lback">Back to path</button>${(S.miss||[]).length?'<button class="btn" data-act="missagain">Drill again</button>':''}</div>`;
  }else if(s.type==='kdrill'){h+=LZ.phase==='quiz'?`<h2 class="t" style="margin-top:8px">${esc(u.t)} drill</h2><p class="sub">Pick the reading for every letter.</p>`+quizHTML():doneHTML(`${LZ.score}% on the drill. When you’re ready, take the typed test.`);
  }else if(s.type==='test'||s.type==='ktest'||s.type==='exam'){
   if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">${s.type==='exam'?esc(LZ.exam.name)+' mock exam':s.type==='ktest'?esc(u.t)+' test: type each letter':'Unit test: '+esc(u.t)}</h2><p class="sub">Pass mark ${QZ.pass} of ${QZ.qs.length}</p>`+quizHTML();
   else{const miss=QZ.qs.map((q,i)=>({q,ok:QZ.res[i]})).filter(x=>!x.ok);
    h+=`<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px;${LZ.passed?'':'filter:grayscale(1);opacity:.4'}"><use href="#seal"/></svg><div class="score">${LZ.score}%</div><div style="font-weight:700">${LZ.passed?(s.type==='exam'?'合格! Level passed':'Passed!'):'Not yet. Review and try again'}</div></div>`;
    if(miss.length)h+=`<h3>Review your misses</h3>`+miss.map(({q})=>`<div class="miss">${q.passage?`<div class="tr">${ruby(q.passage).slice(0,400)}</div>`:''}${q.audio?`<div class="tr">Audio: ${esc(q.audio)}</div>`:''}<div>${q.promptHTML}</div><div><b style="color:var(--ok)">${q.kind==='type'?(q.reveal||esc(q.accept[0])):q.plainChoices?esc(q.choices[q.answer]):ruby(q.choices[q.answer])}</b></div>${q.why?`<div class="why">${esc(q.why)}</div>`:''}</div>`).join('');
-   h+=`<div class="nav2">${LZ.passed?`<button class="btn" data-act="${s.type==='exam'?'lback':'nextunit'}">${s.type==='exam'?'Back to path':'Next unit ›'}</button>`:`<button class="btn alt" data-act="lback">Back</button><button class="btn" data-act="retake">Retake</button>`}</div>`}
+   h+=`<div class="nav2">${LZ.passed?`<button class="btn" data-act="${s.type==='exam'?'lback':'nextunit'}">${s.type==='exam'?'Back to path':'Next unit ›'}</button>`:`<button class="btn alt" data-act="missagain">Drill misses</button><button class="btn" data-act="retake">Retake</button>`}</div>`}
  }
  el.innerHTML=h}
 function doneHTML(msg){return `<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px"><use href="#seal"/></svg><h2 class="t">よくできました!</h2><p class="sub" style="margin:0">${esc(msg)}</p></div><div class="nav2"><button class="btn alt" data-act="lback">Back to unit</button><button class="btn" data-act="nextstep">Next step ›</button></div>`}
@@ -789,6 +805,7 @@ $('#lesson').addEventListener('click',e=>{
  if(!t){if(ln)speak(sceneItems(LZ.data,+ln.dataset.line));else if(sayEl)sayJa(sayEl.dataset.say);return}
  const a=t.dataset.act;
  if(a==='lback'){stopSpeak();const u=LZ.u;LZ=null;PSEL=UBYID[u.id]?u.id:null;go('path');return}
+ if(a==='missagain')return openMiss();
  if(a==='retry')return LZ.exam?loadExam(LZ.exam,S.attempts['exam-'+LZ.exam.id]||1):loadStep(true);
  if(a==='cnext'){if(LZ.i+1<LZ.cards.length){LZ.i++;renderLesson();speakCard()}else{LZ.phase='quiz';startQuiz(wordsDrill(LZ.data),{onDone:finishWords})}return}
  if(a==='cprev'){LZ.i--;renderLesson();speakCard();return}

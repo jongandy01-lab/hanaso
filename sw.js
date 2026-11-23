@@ -1,5 +1,5 @@
 // Hanasō service worker: app shell offline, always fresh when online.
-const CACHE = 'hanaso-v5';
+const CACHE = 'hanaso-v6';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const AI_HOSTS = ['api.anthropic.com', 'api.openai.com', 'generativelanguage.googleapis.com', 'openrouter.ai'];
 
