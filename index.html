@@ -191,6 +191,8 @@ h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
 .ib svg{width:22px;height:22px}
 .ib.send{background:var(--red);color:#fff}
 .ib.live{background:var(--red);color:#fff;animation:pu 1.2s infinite}
+#mic:not([hidden]){width:56px;height:56px;background:var(--ai);color:#fff}#mic.live{background:var(--red)}
+#box[readonly]{background:var(--bg);border-style:dashed}
 @keyframes pu{50%{box-shadow:0 0 0 6px rgba(217,61,39,.25)}}
 .help{flex:none;padding:10px 12px;border-top:1px solid var(--line);background:var(--aiSoft)}
 .help .row{display:flex;gap:8px}
@@ -277,7 +279,7 @@ h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
     </div>
     <div class="comp">
       <button class="ib" id="hbtn" aria-label="How do I say…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg></button>
-      <textarea id="box" rows="1" placeholder="Reply, or try Japanese…" enterkeyhint="send"></textarea>
+      <button class="ib" id="mlang" hidden aria-label="Speech language" style="font-size:13px;font-weight:700">日本</button><textarea id="box" rows="1" placeholder="Tap the mic and speak" enterkeyhint="send"></textarea><button class="ib" id="mclr" hidden aria-label="Clear">✕</button>
       <button class="ib" id="mic" hidden aria-label="Speak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></button>
       <button class="ib send" id="send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
     </div>
@@ -439,7 +441,7 @@ const WORDS_K=[['コーヒー','koohii','coffee'],['パン','pan','bread'],['テ
 
 /* ================= state & storage ================= */
 const LSP='hanaso2:';
-const freshSet=()=>({enMode:'ja',enVoice:'',region:'std',tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
+const freshSet=()=>({micLang:'ja',enMode:'ja',enVoice:'',region:'std',tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
 const fresh=()=>({v:2,updated:0,xp:0,done:{},unitPass:{},levelPass:{},attempts:{},topic:'unit',hist:{},kana:{},kanaOK:{h:0,k:0},kanaRows:['a'],script:'h',stats:{msgs:0,jp:0},days:[],buckets:['talk'],open:'n5',bibleLesson:0,set:freshSet()});
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(LSP+k)||'null')}catch(e){return null}};
 function lsSet(k,v){const s=JSON.stringify(v);try{localStorage.setItem(LSP+k,s)}catch(e){try{const cur=curUnit().id;Object.keys(localStorage).filter(x=>x.startsWith(LSP+'lesson-')&&!x.includes(cur)).forEach(x=>localStorage.removeItem(x));localStorage.setItem(LSP+k,s)}catch(e2){}}}
@@ -460,8 +462,9 @@ async function flushDoc(id){const w=WR[id];if(!COL||!w||w.saving||!w.dirty)retur
 function save(){S.updated=Date.now();put('state2',S)}
 function saveBucket(b){ITEMSU[b]=Date.now();if(!S.buckets.includes(b)){S.buckets.push(b);save()}put('items-'+b,{kind:'items',b,updated:ITEMSU[b],items:ITEMS[b]||[]})}
 const allItems=()=>Object.values(ITEMS).flat();
-const MASTER_BOX=4;
-const masteredWords=()=>[...new Set(allItems().filter(x=>x.t==='w'&&(x.box||0)>=MASTER_BOX).map(x=>plain(x.jp)))].slice(-400);
+let MASTER_BOX=4;
+const masterBox=()=>curUnit().li>=2?6:4;
+const masteredWords=()=>[...new Set(allItems().filter(x=>x.t==='w'&&(x.box||0)>=masterBox()).map(x=>plain(x.jp)))].slice(-400);
 function addItems(b,list){const keys=new Set(allItems().map(x=>x.t+norm(x.jp)));const arr=ITEMS[b]=ITEMS[b]||[];let n=0;
  for(const it of list){const k=it.t+norm(it.jp);if(!norm(it.jp)||keys.has(k))continue;keys.add(k);arr.push({...it,box:0,due:Date.now()});n++}
  if(n)saveBucket(b);return n}
@@ -499,7 +502,7 @@ function markStep(u,s,score){const k=skey(u,s);S.done[k]=Math.max(S.done[k]||0,s
 const TN=()=>S.set.tutor||'Yuki';
 const TNJ=()=>S.set.tutorJa||'ゆき';
 /* ================= AI provider (bring your own key) ================= */
-let SAMPLE=null,TTS=null,DICT=null,capsReady=true;
+let SAMPLE=null,TTS=null,DICT=null,capsReady=true;const PWA_SR=true;
 const AIK='hanaso-ai';
 const PROV={anthropic:{name:'Anthropic (Claude)',keyUrl:'https://console.anthropic.com/settings/keys'},openai:{name:'OpenAI (ChatGPT)',keyUrl:'https://platform.openai.com/api-keys'},gemini:{name:'Google Gemini',keyUrl:'https://aistudio.google.com/apikey'},openrouter:{name:'OpenRouter (many models)',keyUrl:'https://openrouter.ai/keys'},custom:{name:'Other OpenAI-compatible server',keyUrl:''}};
 let AI=(()=>{try{return JSON.parse(localStorage.getItem(AIK)||'null')||{}}catch(e){return{}}})();
@@ -536,7 +539,7 @@ function refreshAI(){SAMPLE=aiReady()?{json:(p,o)=>aiJSON(p,o&&o.modelTier==='qu
 document.addEventListener('click',e=>{if(e.target.closest('[data-goai]')){go('me');setTimeout(()=>{const a=$('#aibox');a&&a.scrollIntoView({block:'start'})},50)}});
 function makeDict(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return null;let rec=null,cP=()=>{},cF=()=>{},cS=()=>{};
  return{onPartial:f=>{cP=f},onFinal:f=>{cF=f},onState:f=>{cS=f},
-  start(){try{rec=new SR();rec.lang='ja-JP';rec.interimResults=true;rec.continuous=false;
+  start(){try{rec=new SR();rec.lang=S.set.micLang==='en'?'en-US':'ja-JP';rec.interimResults=true;rec.continuous=false;
    rec.onresult=e=>{let fin='',int='';for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)fin+=r[0].transcript;else int+=r[0].transcript}if(fin)cF({text:fin});else cP({text:int})};
    rec.onend=()=>cS({state:'idle'});rec.onerror=ev=>{cS({state:'idle'});if(ev&&ev.error==='not-allowed')$('#mic').hidden=true};rec.start();cS({state:'listening'});return Promise.resolve()}catch(e){return Promise.reject({code:'failed'})}},
   stop(){try{rec&&rec.stop()}catch(e){}return Promise.resolve()}}}
@@ -889,7 +892,7 @@ function renderLog(){
  log.innerHTML=out;log.scrollTop=log.scrollHeight;
  const last=h[h.length-1];
  $('#sug').innerHTML=!busy&&last&&last.role==='yuki'&&last.suggest?last.suggest.map(s=>`<button class="sg" data-s="${esc(plain(s))}">${ruby(s)}</button>`).join(''):'';
- $('#box').placeholder=stage()>=3?'日本語でどうぞ…':'Reply, or try Japanese…'}
+ setVoiceUI()}
 $('#log').addEventListener('click',e=>{const j=e.target.closest('.ja'),tr=e.target.closest('.tr.blur');
  if(tr){tr.classList.remove('blur');return}
  if(e.target.closest('#start'))return ask('',true);
@@ -897,14 +900,14 @@ $('#log').addEventListener('click',e=>{const j=e.target.closest('.ja'),tr=e.targ
  if(e.target.closest('#newc')){S.hist[topicKey()]=[];errState=null;save();return renderLog()}
  const r=e.target.closest('[data-replay]');if(r)return speakMsg(hist()[+r.dataset.replay]);
  if(j)sayJa(j.dataset.say)});
-$('#sug').addEventListener('click',e=>{const b=e.target.closest('.sg');if(!b)return;$('#box').value=b.dataset.s;grow();$('#box').focus()});
+$('#sug').addEventListener('click',e=>{const b=e.target.closest('.sg');if(!b)return;sayJa(b.dataset.s);toast('Now say it: tap the mic.')});
 function speakMsg(m){if(!m||!m.lines)return;speak(m.lines.filter(l=>l.lang==='ja'||stage()<=4).map(l=>({lang:l.lang,text:plain(l.text)})))}
 function tutorPrompt(user,opening){
  const st=ST(),u=curUnit(),isU=S.topic==='unit';
  const n=bibleN();const lt=lffText(n),PASS=S.passage&&(S.topic==='bible'||S.topic==='teach')?S.passage:null;
  const t=PASS?(S.topic==='bible'?{en:'Passage study',jp:'本文の学習',scene:`${TN()} studies this passage from 「${PASS.title}」 with the learner: explain it one point at a time in Japanese at the learner's level, check understanding, and ask questions for the learner to answer in Japanese. Passage (from the learner's own copy):\n<<<${PASS.text}>>>`}:{en:'Teaching practice',jp:'教える練習',scene:`ROLE-PLAY: the learner is practicing explaining this passage from 「${PASS.title}」 in Japanese so they can teach it to others. In your "ja" lines play a polite, sincere listener at the learner's level who asks natural questions and sometimes needs simpler explanations. Put coaching in "correction" (clearer or more natural Japanese, and whether they explained the passage accurately). Passage (from the learner's own copy):\n<<<${PASS.text}>>>`}):S.topic==='bible'?{en:'Bible lesson',jp:'聖書レッスン',scene:`${TN()} conducts a Bible lesson (聖書レッスン) with the learner on lesson ${String(n).padStart(2,'0')} 「${lffTitle(n)}」 (section ${lffSec(n)}) of 「${BOOK}」. The lesson's own question headings, in order: ${LFH[n-1].join(' / ')}. Follow these questions and main points as the book teaches them, one point per turn: explain, refer to Bible verses by reference the way the book does (e.g. （ヨハネ 17:3を読む。）) with a brief explanation in your own words, then ask a 復習-style question for the learner to answer in Japanese. Use original wording at the learner's level.${lt?`\nThe lesson's text from the learner's own copy (follow its content faithfully):\n<<<${lt.slice(0,4000)}>>>`:''}`}:S.topic==='teach'?{en:'Teaching practice',jp:'教える練習',scene:`ROLE-PLAY: the learner is practicing conducting a Bible lesson in Japanese on lesson ${String(n).padStart(2,'0')} 「${lffTitle(n)}」 of 「${BOOK}」, so that they can teach it to a Japanese speaker. The lesson's question headings: ${LFH[n-1].join(' / ')}. In your "ja" lines play a polite, sincere student (生徒) at the learner's level: answer their questions, ask natural follow-up questions a real student would ask, and sometimes need things explained more simply. Put coaching in "correction" (more natural or clearer Japanese for what they said, and whether it matched the lesson's point) and, where the stage allows English, in short "en" lines. On the opening turn, greet them as the student and invite them to begin.${lt?`\nThe lesson's text from the learner's own copy, for checking accuracy:\n<<<${lt.slice(0,4000)}>>>`:''}`}:isU?{en:'Unit practice',jp:u.jp,scene:u.kana?'The learner is just starting kana. Teach a few greetings and very simple phrases.':`JLPT ${u.lv.name} unit "${u.t}". Steer the conversation so the learner uses this unit's grammar (${u.g.join('; ')}) and recent words (${(ITEMS[u.id]||[]).slice(-30).map(x=>plain(x.jp)).join('、')||'theme vocabulary'}), on the theme: ${u.th}.`}:TOPICS.find(x=>x.id===S.topic);
  const tr=hist().slice(-14).map(m=>m.role==='me'?`Learner: ${m.text}`:`${TN()}: ${m.say}`).join('\n');
- const MW=masteredWords(),MK=allItems().filter(x=>x.t==='k'&&(x.box||0)>=MASTER_BOX).map(x=>x.jp);
+ MASTER_BOX=masterBox();const MW=masteredWords(),MK=allItems().filter(x=>x.t==='k'&&(x.box||0)>=MASTER_BOX).map(x=>x.jp);
  const known=allItems().filter(x=>x.t==='w'&&(x.box||0)<MASTER_BOX).slice(-100).map(v=>plain(v.jp)).join('、');
  const mg=UNITS.filter(x=>!x.kana&&passed(x)).flatMap(x=>x.g).slice(-40).join('; ');
  return `You are ${TN()} (${TNJ()}), a warm, patient, encouraging female Japanese tutor in a course app that leads an English-speaking adult from zero to JLPT N1 so they can understand anime, J-dramas and news. The learner${S.set.name?', '+S.set.name+',':''} is currently at JLPT ${u.lv.name} level and types Japanese on a phone keyboard.
@@ -951,19 +954,24 @@ async function ask(text,opening,isRetry){
 function grow(){const b=$('#box');b.style.height='auto';b.style.height=Math.min(120,b.scrollHeight)+'px'}
 $('#box').addEventListener('input',grow);
 $('#box').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();sendNow()}});
-function sendNow(){const v=$('#box').value.trim();if(!v||busy)return;$('#box').value='';grow();stopSpeak();if(listening&&DICT)DICT.stop().catch(()=>{});ask(v,false)}
+function sendNow(){const v=$('#box').value.trim();if(!v||busy)return;$('#box').value='';micBase='';grow();setTimeout(setVoiceUI,0);stopSpeak();if(listening&&DICT)DICT.stop().catch(()=>{});ask(v,false)}
 $('#send').addEventListener('click',sendNow);
 $('#hbtn').addEventListener('click',()=>{const h=$('#help');h.hidden=!h.hidden;if(!h.hidden)$('#hq').focus()});
 async function helpAsk(){const q=$('#hq').value.trim();if(!q)return;const out=$('#hout');if(!SAMPLE){out.textContent='Set up your AI in Progress › Your AI first.';return}out.textContent='Thinking…';
  try{const r=await SAMPLE.json(`Translate into natural Japanese (polite です/ます unless the request is clearly casual) that a JLPT ${curUnit().lv.name} learner could say. Text: """${q.slice(0,300)}"""
 Reply with only JSON: {"jp":"Japanese, every kanji run followed by its reading in braces like 買{か}います","romaji":"...","en":"literal meaning back in English","tip":"one short usage tip"}`,{modelTier:'quick'});
   if(!r||!r.jp)throw 0;out.dataset.jp=plain(r.jp);
-  out.innerHTML=`<div class="ja" data-say="${esc(plain(r.jp))}"><div class="jt">${ruby(r.jp)}</div><div class="rm">${esc(r.romaji||'')}</div><div class="tr">${esc(r.en||'')}</div></div>${r.tip?`<div>${esc(r.tip)}</div>`:''}<div class="acts"><button class="mini" id="huse">Use this reply</button></div>`;sayJa(r.jp)
+  out.innerHTML=`<div class="ja" data-say="${esc(plain(r.jp))}"><div class="jt">${ruby(r.jp)}</div><div class="rm">${esc(r.romaji||'')}</div><div class="tr">${esc(r.en||'')}</div></div>${r.tip?`<div>${esc(r.tip)}</div>`:''}<div class="acts"><button class="mini" id="huse">Hear it, then say it</button></div>`;sayJa(r.jp)
  }catch(e){out.textContent=e&&e.code==='rate_limited'?'Too many requests, try again shortly.':'Couldn’t translate that. Try rewording.'}}
 $('#hgo').addEventListener('click',helpAsk);
 $('#hq').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();helpAsk()}});
-$('#hout').addEventListener('click',e=>{if(e.target.closest('#huse')){$('#box').value=$('#hout').dataset.jp||'';grow();$('#help').hidden=true;$('#box').focus()}else{const j=e.target.closest('.ja');if(j)sayJa(j.dataset.say)}});
+$('#hout').addEventListener('click',e=>{if(e.target.closest('#huse')){sayJa($('#hout').dataset.jp||'');$('#help').hidden=true;toast('Now say it: tap the mic.')}else{const j=e.target.closest('.ja');if(j)sayJa(j.dataset.say)}});
 let listening=false,micBase='';
+function setVoiceUI(){const v=!!DICT,b=$('#box');b.readOnly=v;b.setAttribute('inputmode',v?'none':'text');
+ b.placeholder=v?(listening?'Listening…':'Tap 🎤 to speak'):'Use your keyboard’s 🎤 key';
+ $('#mlang').hidden=!v||!PWA_SR;$('#mlang').textContent=S.set.micLang==='en'?'EN':'日本';$('#mclr').hidden=!b.value.trim()}
+$('#mlang').addEventListener('click',()=>{S.set.micLang=S.set.micLang==='en'?'ja':'en';save();setVoiceUI();toast(S.set.micLang==='en'?'Listening for English':'日本語で聞きます')});
+$('#mclr').addEventListener('click',()=>{$('#box').value='';micBase='';grow();setVoiceUI()});
 $('#mic').addEventListener('click',()=>{if(!DICT)return;if(listening){DICT.stop().catch(()=>{});return}stopSpeak();micBase=$('#box').value.trim();DICT.start().catch(e=>{if(e&&e.code==='not_granted')$('#mic').hidden=true})});
 
 /* ================= review (items + kana) ================= */
@@ -1206,7 +1214,7 @@ function renderMe(){const all=allItems(),u=curUnit(),jv=jaVoices();
  let cumK=0,cumW=0;
  const tg=LVS.map(lv=>{const its=lv.units.flatMap(x=>ITEMS[x.id]||[]);const w=its.filter(x=>x.t==='w').length,k=its.filter(x=>x.t==='k').length;return `<div class="tgt"><b>${lv.name}</b><div><div class="qstat"><span>${w} / ${lv.words} words · ${k} / ${lv.kanji} kanji</span><span>${lvDone(lv)}/${lv.units.length} units</span></div><div class="bar"><i style="width:${Math.min(100,(w/lv.words*70+k/lv.kanji*30))}%"></i></div></div></div>`}).join('');
  $('#me').innerHTML=`<h2 class="t">Your progress</h2><p class="sub">Now: ${u.lv.name} · ${esc(u.t)} · conversation stage ${stage()} (${ST().mix}% Japanese)</p>
- <div class="stats"><div class="st"><b>${S.xp}</b><span>XP</span></div><div class="st"><b>${streak()}</b><span>day streak</span></div><div class="st"><b>${all.filter(x=>x.t==='w').length}</b><span>words in review</span></div><div class="st"><b>${all.filter(x=>x.t==='k').length}</b><span>kanji learned</span></div><div class="st"><b>${masteredWords().length}</b><span>words mastered (Japanese-only in Talk)</span></div><div class="st"><b>${km}</b><span>kana mastered</span></div><div class="st"><b>${S.stats.jp}</b><span>replies in Japanese</span></div></div>
+ <div class="stats"><div class="st"><b>${S.xp}</b><span>XP</span></div><div class="st"><b>${streak()}</b><span>day streak</span></div><div class="st"><b>${all.filter(x=>x.t==='w').length}</b><span>words in review</span></div><div class="st"><b>${all.filter(x=>x.t==='k').length}</b><span>kanji learned</span></div><div class="st"><b>${masteredWords().length}</b><span>words mastered (Japanese-only in Talk; ${masterBox()} correct reviews in a row${curUnit().li>=2?', N3+ rule':''})</span></div><div class="st"><b>${km}</b><span>kana mastered</span></div><div class="st"><b>${S.stats.jp}</b><span>replies in Japanese</span></div></div>
  <h3>JLPT targets</h3><p class="sub" style="margin:0 0 4px">Approximate new words and kanji each level adds. The bar mixes both.</p>${tg}
  <h3 id="aibox">Your AI</h3>
  <p class="sub" style="margin:0 0 4px">Lessons and conversations use your own AI account. Your key is stored only on this device and sent only to your provider.</p>
@@ -1273,8 +1281,9 @@ refreshAI();
 DICT=makeDict();
 if(DICT){$('#mic').hidden=false;
  DICT.onPartial(({text})=>{$('#box').value=(micBase+' '+text).trim();grow()});
- DICT.onFinal(({text})=>{micBase=(micBase+' '+text).trim();$('#box').value=micBase;grow()});
- DICT.onState(({state})=>{listening=state==='listening';$('#mic').classList.toggle('live',listening)})}
+ DICT.onFinal(({text})=>{micBase=(micBase+' '+text).trim();$('#box').value=micBase;grow();setVoiceUI()});
+ DICT.onState(({state})=>{listening=state==='listening';$('#mic').classList.toggle('live',listening);setVoiceUI()})}
+setVoiceUI();
 IDB.all().then(d=>{LIB=d||[]}).catch(()=>{});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
