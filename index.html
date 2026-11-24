@@ -185,6 +185,8 @@ h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
 .welcome h2{font-size:24px;line-height:1.2;margin:0 0 8px;text-wrap:balance}
 .welcome p{color:var(--mute);margin:0 0 16px}
 .uprog{flex:none;padding:6px 16px;font-size:13px;color:var(--mute);background:var(--aiSoft)}
+.cmin{flex:none;height:22px;display:grid;place-items:center;border-top:1px solid var(--line);background:var(--bg);width:100%}.cmin i{width:40px;height:4px;border-radius:9px;background:var(--line)}
+#talk.min .comp,#talk.min .sug,#talk.min #help,#talk.min .cmin,#talk.min .topics,#talk.min .uprog{display:none!important}
 .comp{flex:none;border-top:1px solid var(--line);padding:10px 12px;display:flex;gap:8px;align-items:flex-end;background:var(--bg)}
 .comp textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 12px;font-size:16px;line-height:1.4;max-height:120px;min-height:44px}
 .ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--card);text-align:center}
@@ -273,10 +275,12 @@ h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
     <div class="uprog" id="uprog" hidden></div>
     <div class="log" id="log"></div>
     <div class="sug" id="sug"></div>
+    <button class="btn blue" id="reopen" hidden style="margin:6px 16px 8px;flex:none;align-self:flex-end;min-height:42px;padding:8px 18px;border-radius:99px">🎤 Reply</button>
     <div class="help" id="help" hidden>
       <div class="row"><input id="hq" placeholder="How do I say… (type English)" enterkeyhint="go"><button class="btn" id="hgo" style="padding:8px 14px">Ask</button></div>
       <div class="out" id="hout"></div>
     </div>
+    <button class="cmin" id="cmin" aria-label="Hide the reply bar"><i></i></button>
     <div class="comp">
       <button class="ib" id="hbtn" aria-label="How do I say…"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg></button>
       <button class="ib" id="mlang" hidden aria-label="Speech language" style="font-size:13px;font-weight:700">日本</button><textarea id="box" rows="1" placeholder="Tap the mic and speak" enterkeyhint="send"></textarea><button class="ib" id="mclr" hidden aria-label="Clear">✕</button>
@@ -581,13 +585,14 @@ let view='path';
 function go(v){view=v;stopSpeak();
  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v||(v==='lesson'&&x.dataset.v==='path')));
  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id===v));
- if(v==='path')renderPath();if(v==='talk'){renderTopics();renderLog()}if(v==='review')renderReview();if(v==='me')renderMe();if(v==='lesson')renderLesson();
+ if(v==='path')renderPath();if(v==='talk'){setTalkMin(false);renderTopics();renderLog()}if(v==='review')renderReview();if(v==='me')renderMe();if(v==='lesson')renderLesson();
  const el=$('#'+v);if(el&&v!=='talk')el.scrollTop=0;arm()}
 /* back button: step back through screens; leave the app only from the Path's top screen */
 const atRoot=()=>view==='path'&&!PSEL;
 function arm(){try{if(!(history.state&&history.state.hanaso))history.pushState({hanaso:1},'')}catch(e){}}
 let lastBack=0;
 function goBack(){
+ if(view==='talk'&&!TALKMIN){setTalkMin(true);return}
  if(view==='lesson'){const u=LZ&&LZ.u;stopSpeak();LZ=null;QZ=null;PSEL=u&&UBYID[u.id]?u.id:null;go('path');return}
  if(view==='review'&&REVTAB==='book'&&LIBSEL){if(LIBSEC!=null)LIBSEC=null;else LIBSEL=null;BK.data=null;BK.err='';renderLib();return}
  if(view==='review'&&REVTAB==='items'&&rv){rv=null;renderItems();return}
@@ -967,6 +972,10 @@ $('#hgo').addEventListener('click',helpAsk);
 $('#hq').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();helpAsk()}});
 $('#hout').addEventListener('click',e=>{if(e.target.closest('#huse')){sayJa($('#hout').dataset.jp||'');$('#help').hidden=true;toast('Now say it: tap the mic.')}else{const j=e.target.closest('.ja');if(j)sayJa(j.dataset.say)}});
 let listening=false,micBase='';
+let TALKMIN=false;
+function setTalkMin(v){TALKMIN=v;$('#talk').classList.toggle('min',v);$('#reopen').hidden=!v;if(!v){const l=$('#log');l&&(l.scrollTop=l.scrollHeight)}}
+$('#cmin').addEventListener('click',()=>setTalkMin(true));
+$('#reopen').addEventListener('click',()=>setTalkMin(false));
 function setVoiceUI(){const v=!!DICT,b=$('#box');b.readOnly=v;b.setAttribute('inputmode',v?'none':'text');
  b.placeholder=v?(listening?'Listening…':'Tap 🎤 to speak'):'Use your keyboard’s 🎤 key';
  $('#mlang').hidden=!v||!PWA_SR;$('#mlang').textContent=S.set.micLang==='en'?'EN':'日本';$('#mclr').hidden=!b.value.trim()}
