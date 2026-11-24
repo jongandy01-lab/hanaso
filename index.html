@@ -394,6 +394,7 @@ function stepsOf(u){
  const out=[],gap=ws.length/(mix.length+1);let mi=0;
  ws.forEach((w,i)=>{out.push(w);while(mi<mix.length&&i+1>=gap*(mi+1))out.push(mix[mi++])});
  while(mi<mix.length)out.push(mix[mi++]);
+ if(KS()&&u.li>=1)out.push({id:'K',type:'kansai'});
  out.push({id:'T',type:'talk'},{id:'X',type:'test'});
  return u.steps=out}
 const kanjiForSet=(u,i)=>{const cs=[...(u.k||'')];if(!cs.length)return[];const per=Math.ceil(cs.length/u.lv.sets);return cs.slice(i*per,i*per+per)};
@@ -414,6 +415,7 @@ const TOPICS=[
  {id:'polite',en:'Polite & formal',jp:'敬語',scene:'Formal Japanese: formal self-introduction, requests with いただけますか, apologizing, phone manners.'},
  {id:'bible',en:'Bible lesson',jp:'聖書レッスン',scene:''},
  {id:'teach',en:'You teach',jp:'教える練習',scene:''},
+ {id:'kansai',en:'Osaka & Kyoto',jp:'関西',scene:'Casual chat about life in Osaka and Kyoto (food, neighborhoods, festivals, manners, humor). The tutor speaks gentle Kansai-ben suited to the learner\'s level, explains it, and coaches the learner to answer in natural Osaka/Kyoto speech.'},
  {id:'media',en:'Anime & dramas',jp:'アニメ・ドラマ',scene:'Talking about anime, dramas and shows the learner watches, characters and plots (no spoilers needed).'},
  {id:'news',en:'The news',jp:'ニュース',scene:'Discussing a recent kind of news story (economy, weather, technology, sports) in level-appropriate Japanese.'}];
 const LFF=[["How Can the Bible Help You?", "聖書はどのように役立つ？"], ["The Bible Gives Hope", "聖書を読むと希望が持てる"], ["Can You Trust the Bible?", "聖書は信用できる本？"], ["Who Is God?", "聖書の神とは？"], ["The Bible Is God's Message to Us", "聖書は神からのメッセージ"], ["How Did Life Begin?", "生命はどのようにして始まった？"], ["What Is Jehovah Like?", "エホバはどんな神？"], ["You Can Be Jehovah's Friend", "あなたもエホバと友達になれる"], ["Draw Close to God Through Prayer", "祈ることによって神との友情を育てる"], ["How Can the Meetings of Jehovah's Witnesses Benefit You?", "エホバの証人の集会に行くとよいのはどうして？"], ["How You Can Get the Most Out of the Bible", "聖書から十分に学ぶには？"], ["What Will Help You to Keep Studying the Bible?", "聖書を学び続けるのに役立つこと"], ["How False Religion Misrepresents God", "多くの宗教は神のことを正しく伝えていない"], ["How Can Our Worship Be Pleasing to God?", "神に喜ばれるのはどんな崇拝？"], ["Who Is Jesus?", "イエス・キリストって何者？"], ["What Did Jesus Do While on Earth?", "イエスは地上でどんなことをした？"], ["What Is Jesus Like?", "イエスはどんな方？"], ["How to Identify Real Christians", "本物のクリスチャンはどんな人たち？"], ["Are Jehovah's Witnesses Real Christians?", "エホバの証人は本物のクリスチャン？"], ["How the Congregation Is Organized", "会衆はどのように組織されている？"], ["How Is the Good News Being Preached?", "良い知らせはどのように伝えられている？"], ["How Can You Share the Good News?", "あなたも良い知らせを伝えられる"], ["Baptism—A Worthwhile Goal!", "バプテスマは大切なステップ"], ["What Is the Truth About Angels?", "天使とはどんな存在？"], ["What Is God's Purpose for Us?", "神は人間がどう生きることを望んでいる？"], ["Why Do Evil and Suffering Exist?", "悪いことや苦しいことがあるのはどうして？"], ["How Can Jesus' Death Save Us?", "イエスの死によって私たちは救われる"], ["Show Appreciation for What Jehovah and Jesus Did for You", "エホバとイエスがしてくれたことに感謝する"], ["What Happens When We Die?", "死ぬとどうなる？"], ["Your Loved Ones Can Live Again!", "亡くなった家族や友達にまた会える"], ["What Is God's Kingdom?", "神の王国って何？"], ["God's Kingdom Now Rules!", "神の王国はもう存在している"], ["What the Kingdom Will Accomplish", "神の王国は何をする？"], ["How Can We Show Our Love for Jehovah?", "エホバを愛していることを行動で示す"], ["How to Make Good Decisions", "どうすれば良い判断ができる？"], ["Be Honest in All Things", "いつも正直でいることは大切"], ["What the Bible Says About Work and Money", "仕事やお金について聖書は何と言っている？"], ["Appreciate the Gift of Life", "命という贈り物に感謝する"], ["God's View of Blood", "血は神にとってどういうもの？"], ["How Can We Be Clean in God's Eyes?", "どうすれば神から見て清い人になれる？"], ["What Does the Bible Say About Sex?", "性について聖書は何と言っている？"], ["What Does the Bible Say About Singleness and Marriage?", "独身でいることや結婚について聖書は何と言っている？"], ["How Should Christians View Alcohol?", "クリスチャンはお酒を飲んでもいい？"], ["Do All Celebrations Please God?", "神に喜ばれないお祝いってある？"], ["What It Means to Be Neutral", "中立であるとはどういうこと？"], ["Why Make a Dedication and Get Baptized?", "神に献身してバプテスマを受けるのはどうして？"], ["Are You Ready to Get Baptized?", "バプテスマを受けるにはどうしたらいい？"], ["Choose Your Friends Wisely", "どんな人たちと友達になったらいい？"], ["How Can Your Family Be Happy?—Part 1", "幸せな家族になる パート１"], ["How Can Your Family Be Happy?—Part 2", "幸せな家族になる パート２"], ["How Can You Please Jehovah With Your Speech?", "エホバに喜ばれる話し方をする"], ["Why Our Clothing and Appearance Matter", "良い身だしなみは大切"], ["Choose Entertainment That Pleases Jehovah", "エホバの考えに沿って楽しい時間を過ごす"], ["The Role of “the Faithful and Discreet Slave”", "「忠実で思慮深い奴隷」の役割"], ["Support Your Local Congregation", "会衆をサポートする"], ["Maintain Unity in the Congregation", "会衆のみんなと仲良くする"], ["What if You Commit a Serious Sin?", "重大な罪を犯してしまったら？"], ["Remain Loyal to Jehovah", "エホバを愛して従い続ける"], ["You Can Endure Persecution", "迫害されても大丈夫"], ["Continue Making Progress", "クリスチャンとして成長し続ける"]];
@@ -422,6 +424,8 @@ const LFP=["聖書はどのように役立つか。聖書は誰からのメッ�
 const BOOK='いつまでも幸せに暮らせます 楽しく学べる聖書レッスン';
 const lffSec=n=>n<=12?1:n<=33?2:n<=47?3:4;
 const lffTitle=n=>{const x=LFF[n-1];return x?(x[1]?x[1]+' ('+x[0]+')':x[0]):''};
+const KS=()=>S.set.region==='kansai';
+const KANSAI_T=()=>KS()?`\n${TN()} is a native of Kyoto who also lived in Osaka. In polite or formal situations, and in Bible lessons, she speaks standard polite Japanese. In casual moments she naturally uses gentle Kansai speech (Kyoto: ～はる, ～え, ～しはる, おおきに; Osaka: ～へん, ～や, ～ねん, ほんま, めっちゃ, あかん) at a level the learner can follow, and briefly points out the standard equivalent. The learner wants to eventually sound like a native of Osaka/Kyoto, so encourage them to use Kansai expressions in casual talk and gently correct unnatural Kansai.`:'';
 const STYLE=()=>`Speaking style for ${TN()}: model her Japanese on the register of the Japanese Bible-study book 「${BOOK}」 published by Jehovah's Witnesses: gentle, warm, respectful plain-polite です・ます; short, clear sentences with one idea each; everyday words rather than difficult ones; questions that invite the listener to think (〜と思いますか。どうしてでしょうか。考えてみましょう。); kind invitations with 〜しましょう／〜てみてください; a brief summary of the main point. Never pushy, sarcastic or slangy (except inside anime/drama scenes or units about casual speech, which are about other characters' speech).`;
 const THINK=`Help the learner THINK in Japanese: prefer explaining Japanese with simple Japanese the learner already knows (やさしい日本語), connect new words to known ones, and ask questions answered in Japanese.`;
 const KROWS=[['a','あいうえお','a i u e o'],['k','かきくけこ','ka ki ku ke ko'],['s','さしすせそ','sa shi su se so'],['t','たちつてと','ta chi tsu te to'],['n','なにぬねの','na ni nu ne no'],['h','はひふへほ','ha hi fu he ho'],['m','まみむめも','ma mi mu me mo'],['y','や・ゆ・よ','ya - yu - yo'],['r','らりるれろ','ra ri ru re ro'],['w','わ・・・を','wa - - - wo'],['nn','ん','n'],['g','がぎぐげご','ga gi gu ge go'],['z','ざじずぜぞ','za ji zu ze zo'],['d','だぢづでど','da ji zu de do'],['b','ばびぶべぼ','ba bi bu be bo'],['p','ぱぴぷぺぽ','pa pi pu pe po']];
@@ -435,7 +439,7 @@ const WORDS_K=[['コーヒー','koohii','coffee'],['パン','pan','bread'],['テ
 
 /* ================= state & storage ================= */
 const LSP='hanaso2:';
-const freshSet=()=>({tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
+const freshSet=()=>({region:'std',tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
 const fresh=()=>({v:2,updated:0,xp:0,done:{},unitPass:{},levelPass:{},attempts:{},topic:'unit',hist:{},kana:{},kanaOK:{h:0,k:0},kanaRows:['a'],script:'h',stats:{msgs:0,jp:0},days:[],buckets:['talk'],open:'n5',bibleLesson:0,set:freshSet()});
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(LSP+k)||'null')}catch(e){return null}};
 function lsSet(k,v){const s=JSON.stringify(v);try{localStorage.setItem(LSP+k,s)}catch(e){try{const cur=curUnit().id;Object.keys(localStorage).filter(x=>x.startsWith(LSP+'lesson-')&&!x.includes(cur)).forEach(x=>localStorage.removeItem(x));localStorage.setItem(LSP+k,s)}catch(e2){}}}
@@ -475,12 +479,13 @@ const showEnglish=()=>S.set.english==='on'||(S.set.english==='auto'&&stage()<=2)
 function markDay(){const d=today();if(!S.days.includes(d)){S.days.push(d);S.days=S.days.slice(-90)}}
 function streak(){let n=0,d=new Date();for(;;){const k=d.toISOString().slice(0,10);if(S.days.includes(k)){n++;d=new Date(d-DAY)}else if(n===0&&k===today()){d=new Date(d-DAY)}else break}return n}
 function gain(x){S.xp+=x;markDay()}
-function stepLabel(s){return{words:`Words & kanji ${s.i+1}`,grammar:`Grammar: ${(s.pts||[]).join(' · ')}`,listen:`Listening scene ${s.i+1}`,study:`Bible lesson ${String(s.n).padStart(2,'0')}: ${LFF[s.n-1]?LFF[s.n-1][1]||LFF[s.n-1][0]:''}`,talk:'Conversation practice',test:'Unit test',klearn:'Learn the chart & trace',kdrill:'Kana drill',miss:'Missed material',kprac:'Practice reading & writing',ktest:'Kana test'}[s.type]}
+function stepLabel(s){return{words:`Words & kanji ${s.i+1}`,grammar:`Grammar: ${(s.pts||[]).join(' · ')}`,listen:`Listening scene ${s.i+1}`,study:`Bible lesson ${String(s.n).padStart(2,'0')}: ${LFF[s.n-1]?LFF[s.n-1][1]||LFF[s.n-1][0]:''}`,talk:'Conversation practice',test:'Unit test',klearn:'Learn the chart & trace',kansai:'Kansai corner: 関西弁',kdrill:'Kana drill',miss:'Missed material',kprac:'Practice reading & writing',ktest:'Kana test'}[s.type]}
 function stepSub(s,u){const lv=u.lv;switch(s.type){
  case 'words':{const ks=lv.id==='n5'?kanjiForSet(u,s.i):[];return `${lv.wc} words${ks.length?' · kanji '+ks.join(' '):lv.kc?' · '+lv.kc+' kanji':''}`}
  case 'grammar':return 'Patterns, examples, drill';
  case 'listen':return `${lv.genres[s.i%lv.genres.length]} · comprehension questions`;
  case 'study':return `${u.li<=2?'Simplified to '+lv.name+' level':'Full register'} · listen, answer, review in Japanese`;
+ case 'kansai':return 'Osaka & Kyoto versions of this unit, with accent tips';
  case 'talk':return `Chat with ${TN()} using this unit (5 replies)`;
  case 'test':return '10 questions · pass with 100%';
  case 'klearn':return 'Tap letters to hear them, trace them';
@@ -649,6 +654,11 @@ Do not repeat words the learner already knows: ${knownWords(lv)||'(none)'}.
 Shape: {"kanji":[{"k":"食","meaning":"eat; food","on":["ショク"],"kun":["た(べる)"],"examples":[{"jp":"食{しょく}事{じ}","en":"meal"}]}],"words":[{"jp":"朝{あさ}ご飯{はん}","reading":"あさごはん","romaji":"asagohan","en":"breakfast","def":"朝{あさ}に食{た}べるご飯{はん}。","ex":"毎朝{まいあさ}朝{あさ}ご飯{はん}を食{た}べます。","exEn":"I eat breakfast every morning."}]}
 "def": ${u.li===0?'a very short Japanese definition using only basic words, or "" if impossible at this level':'a simple Japanese definition (やさしい日本語) using only words at or below JLPT '+lv.name}. Where natural, some example sentences may use the gentle explanatory tone described above.
 Rules: on readings in katakana, kun readings in hiragana with okurigana in parentheses; 1–2 example words per kanji; example sentences short, natural, and using grammar up to JLPT ${lv.name}; Hepburn romaji.`}
+ if(s.type==='kansai')return `${HEAD}
+The learner wants to eventually be taken for a native of Osaka/Kyoto (Kansai) while still using standard Japanese in formal settings. Write a "Kansai corner" lesson for JLPT ${lv.name} unit "${u.t}" (theme: ${u.th}; grammar: ${u.g.join('; ')}).
+Give 3–5 points showing how natives in Osaka and Kyoto would say this unit's grammar and everyday expressions: "pattern" is the Kansai form, "form" is "standard → Osaka → Kyoto", "meaning" in English, "notes" ${u.li<=2?'in English':'in simple Japanese with English in "notesEn"'} on who says it and when (casual vs polite, Osaka vs Kyoto feel, things to avoid), plus a pitch-accent tip where Kansai accent differs from Tokyo for a key word (describe the high/low pattern in words, e.g. "Tokyo: あめ high-low; Kansai: あめ low-high"). 3 short natural examples per point, Kansai sentences with the standard Japanese and English in "en" like "標準語: ～ / English: ～".
+Then 6 multiple-choice drill questions: pick the natural Kansai version, or what a Kansai line means.
+Shape: {"points":[{"pattern":"行{い}かへん","meaning":"won't go / don't go","form":"行{い}かない → 行{い}かへん → 行{い}かへん／行{い}かしまへん","notes":"...","notesEn":"","examples":[{"jp":"今日{きょう}は行{い}かへんわ。","romaji":"kyou wa ikahen wa.","en":"標準語: 今日は行かないよ。 / English: I'm not going today."}]}],"drill":[{"q":"「行かない」を大阪弁で言うと？","choices":["行かへん","行かへんかった","行きまへんどす","行かんかい"],"answer":0,"why":"short reason in English"}]}`;
  if(s.type==='grammar')return `${HEADS()}
 Level: JLPT ${lv.name}. Unit "${u.t}" (theme: ${u.th}). Teach these grammar points: ${s.pts.join('; ')}.
 For each point: pattern, meaning, how to form it, and notes ${u.li<=1?'in clear, friendly English (add one short やさしい日本語 sentence restating the meaning, inside the notes)':'in simple Japanese with an English translation in "notesEn"'} covering nuance, register and common mistakes${u.li>=2?', plus how it sounds in anime, dramas or news if relevant':''}. Give 3 short, natural examples per point on the unit theme${u.li<=1?' with romaji':''}.
@@ -656,7 +666,7 @@ Then write 6 multiple-choice drill questions like JLPT 文法 questions (fill th
 Shape: {"points":[{"pattern":"～てください","meaning":"please do ~","form":"Verb て-form + ください","notes":"...","notesEn":"","examples":[{"jp":"窓{まど}を開{あ}けてください。","romaji":"mado o akete kudasai.","en":"Please open the window."}]}],"drill":[{"q":"窓{まど}を＿＿ください。","en":"Please open the window.","choices":["開{あ}けて","開{あ}ける","開{あ}けた","開{あ}けない"],"answer":0,"why":"short reason in English"}]}`;
  if(s.type==='listen'){const genre=lv.genres[s.i%lv.genres.length];
   return `${HEAD}
-Write an ORIGINAL ${genre} scene for listening practice at JLPT ${lv.name}, in unit "${u.t}" (theme: ${u.th}), naturally using this grammar: ${u.g.join('; ')}. Length: ${lv.len}. Make it sound like real ${genre} speech at this level${u.li>=3?' — natural register, contractions and pace':''}. Original characters only: never existing anime, shows, brands or real people. A news report uses an anchor and optionally a reporter or interviewee.
+Write an ORIGINAL ${genre} scene for listening practice at JLPT ${lv.name}, in unit "${u.t}" (theme: ${u.th}), naturally using this grammar: ${u.g.join('; ')}. Length: ${lv.len}. Make it sound like real ${genre} speech at this level${u.li>=3?' — natural register, contractions and pace':''}. ${KS()&&u.li>=1&&!/news/i.test(genre)?'Set it in Osaka or Kyoto when natural; casual characters speak authentic Osaka-ben or Kyoto-ben suited to JLPT '+lv.name+' learners, with the standard Japanese in each line\'s "en" as "標準語: … / English: …". ':''}Original characters only: never existing anime, shows, brands or real people. A news report uses an anchor and optionally a reporter or interviewee.
 Then 4 comprehension questions ${lv.qlang}, 4 choices each, answerable only by listening.
 Shape: {"title":"...","genre":"${genre}","setting":"one-line English description of the scene","cast":[{"name":"ハルト","gender":"m"},{"name":"ミク","gender":"f"}],"lines":[{"who":"ハルト","jp":"...","romaji":"...","en":"..."}],"questions":[{"q":"...","choices":["","","",""],"answer":0}],"vocab":[{"jp":"","reading":"","romaji":"","en":""}]}
 "vocab": up to 5 key words from the scene. "gender" is "m" or "f".`}
@@ -690,7 +700,7 @@ async function getLesson(u,s,key,prompt){
  LESS[key]=c;put(key,{kind:'lesson',c},300);return c}
 const lessonKey=(u,s,a)=>`lesson-${u.id}-${s.id}${a?'-a'+a:''}`;
 const PREF={};
-function prefetch(u){if(!SAMPLE)return;const s=stepsOf(u).find(x=>!stepDone(u,x)&&['words','grammar','listen','study'].includes(x.type));if(!s)return;const k=lessonKey(u,s);if(LESS[k]||PREF[k]||lsGet(k))return;PREF[k]=1;getLesson(u,s,k,promptFor(u,s)).catch(()=>{}).finally(()=>{PREF[k]=0})}
+function prefetch(u){if(!SAMPLE)return;const s=stepsOf(u).find(x=>!stepDone(u,x)&&['words','grammar','listen','study','kansai'].includes(x.type));if(!s)return;const k=lessonKey(u,s);if(LESS[k]||PREF[k]||lsGet(k))return;PREF[k]=1;getLesson(u,s,k,promptFor(u,s)).catch(()=>{}).finally(()=>{PREF[k]=0})}
 
 function openStep(u,s){
  if(!u||!s)return;
@@ -712,7 +722,7 @@ async function loadStep(regen){const {u,s}=LZ;LZ.phase='loading';LZ.err=null;ren
   if(LZ.u!==u||LZ.s!==s)return;
   LZ.data=d;LZ.i=0;
   if(s.type==='words'){if(!Array.isArray(d.words)||!d.words.length)throw{code:'invalid_json'};LZ.cards=[...(d.kanji||[]).filter(k=>k&&k.k).map(k=>({t:'k',...k})),...d.words.filter(w=>w&&w.jp).map(w=>({t:'w',...w}))];LZ.phase='cards';renderLesson();speakCard()}
-  else if(s.type==='grammar'){if(!Array.isArray(d.points))throw{code:'invalid_json'};LZ.phase='learn';renderLesson()}
+  else if(s.type==='grammar'||s.type==='kansai'){if(!Array.isArray(d.points))throw{code:'invalid_json'};LZ.phase='learn';renderLesson()}
   else if(s.type==='listen'||s.type==='study'){if(!Array.isArray(d.lines)||!d.lines.length)throw{code:'invalid_json'};LZ.phase='listen';const lq=normQs(d.questions);if(!lq.length){LZ.phase='review';LZ.score=100;finishListen();return}startQuiz(lq,{embed:true,onDone:(r,t)=>{LZ.phase='review';LZ.score=Math.round(r/t*100);finishListen()}})}
   else if(s.type==='test'){const qs=normQs(d.questions).slice(0,10);if(qs.length<5)throw{code:'invalid_json'};LZ.phase='quiz';startQuiz(qs,{pass:qs.length,onDone:(r,t)=>finishTest(r,t)})}
  }catch(e){LZ.phase='error';LZ.err=e;renderLesson()}}
@@ -789,8 +799,8 @@ function renderLesson(){const el=$('#lesson');if(!LZ){el.innerHTML='';return}
   if(LZ.phase==='cards'){const c=LZ.cards[LZ.i];h+=`<h2 class="t" style="margin-top:8px">${esc(u.t)}</h2><p class="sub">Card ${LZ.i+1} of ${LZ.cards.length} · tap Japanese to hear it</p>${cardHTML(c)}<div class="dots">${LZ.cards.map((_,i)=>`<i class="${i===LZ.i?'on':''}"></i>`).join('')}</div><div class="nav2"><button class="btn alt" data-act="cprev" ${LZ.i?'':'disabled'}>‹ Back</button><button class="btn" data-act="cnext">${LZ.i+1<LZ.cards.length?'Next ›':'Practice ›'}</button></div>`}
   else if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">Quick practice</h2>`+quizHTML();
   else h+=doneHTML(`${LZ.score}% on practice · ${LZ.added} new card${LZ.added===1?'':'s'} added to review`);
- }else if(s.type==='grammar'){const d=LZ.data;
-  if(LZ.phase==='learn'){h+=`<h2 class="t" style="margin-top:8px">${esc(s.pts.join(' · '))}</h2>`+(d.points||[]).map(p=>`<div class="gpt"><h4>${ruby(p.pattern||'')}</h4><div><b>${esc(p.meaning||'')}</b></div>${p.form?`<div class="form">${ruby(p.form)}</div>`:''}<p style="margin:6px 0">${ruby(p.notes||'')}</p>${p.notesEn?`<p class="tr blur" style="margin:0 0 6px">${esc(p.notesEn)}</p>`:''}${(p.examples||[]).map(x=>`<div class="ex" data-say="${esc(plain(x.jp))}"><div class="jt">${ruby(x.jp)}</div>${x.romaji&&(showRomaji()||u.li<=1)?`<div class="rm">${esc(x.romaji)}</div>`:''}<div class="tr">${esc(x.en||'')}</div></div>`).join('')}</div>`).join('')+`<button class="btn wide" data-act="gdrill">Start the drill ›</button>`}
+ }else if(s.type==='grammar'||s.type==='kansai'){const d=LZ.data;
+  if(LZ.phase==='learn'){h+=`<h2 class="t" style="margin-top:8px">${s.type==='kansai'?'関西弁 · Osaka & Kyoto':esc(s.pts.join(' · '))}</h2>${s.type==='kansai'?'<p class="sub">Audio uses your device’s standard (Tokyo) accent, so follow the written accent tips.</p>':''}`+(d.points||[]).map(p=>`<div class="gpt"><h4>${ruby(p.pattern||'')}</h4><div><b>${esc(p.meaning||'')}</b></div>${p.form?`<div class="form">${ruby(p.form)}</div>`:''}<p style="margin:6px 0">${ruby(p.notes||'')}</p>${p.notesEn?`<p class="tr blur" style="margin:0 0 6px">${esc(p.notesEn)}</p>`:''}${(p.examples||[]).map(x=>`<div class="ex" data-say="${esc(plain(x.jp))}"><div class="jt">${ruby(x.jp)}</div>${x.romaji&&(showRomaji()||u.li<=1)?`<div class="rm">${esc(x.romaji)}</div>`:''}<div class="tr">${esc(x.en||'')}</div></div>`).join('')}</div>`).join('')+`<button class="btn wide" data-act="gdrill">Start the drill ›</button>`}
   else if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">Grammar drill</h2>`+quizHTML();
   else h+=doneHTML(`${LZ.score}% on the drill`);
  }else if(s.type==='listen'||s.type==='study'){const d=LZ.data;const isB=s.type==='study';
@@ -845,7 +855,7 @@ const bibleN=()=>S.bibleLesson||(curUnit().book||[1])[0];
 const topicKey=()=>S.topic==='unit'?'unit:'+curUnit().id:(S.topic==='bible'||S.topic==='teach')?S.topic+':'+(S.passage?'p:'+S.passage.title.slice(0,40):bibleN()):S.topic;
 const hist=()=>(S.hist[topicKey()]=S.hist[topicKey()]||[]);
 function renderTopics(){const u=curUnit();
- $('#topics').innerHTML=`<button class="tp unit ${S.topic==='unit'?'on':''}" data-t="unit">This unit<span class="kl">${esc(u.jp)}</span></button>`+TOPICS.map(t=>`<button class="tp ${t.id===S.topic?'on':''}" data-t="${t.id}">${esc(t.en)}<span class="kl">${esc(t.jp)}</span></button>`).join('')}
+ $('#topics').innerHTML=`<button class="tp unit ${S.topic==='unit'?'on':''}" data-t="unit">This unit<span class="kl">${esc(u.jp)}</span></button>`+TOPICS.filter(t=>t.id!=='kansai'||KS()).map(t=>`<button class="tp ${t.id===S.topic?'on':''}" data-t="${t.id}">${esc(t.en)}<span class="kl">${esc(t.jp)}</span></button>`).join('')}
 $('#uprog').addEventListener('click',e=>{if(e.target.id==='clrpass'){S.passage=null;errState=null;save();renderLog()}});
 $('#uprog').addEventListener('change',e=>{if(e.target.id==='blsel'){S.bibleLesson=+e.target.value;errState=null;save();renderLog()}});
 $('#topics').addEventListener('click',e=>{const b=e.target.closest('.tp');if(!b||busy)return;S.topic=b.dataset.t;errState=null;save();renderTopics();renderLog()});
@@ -891,7 +901,7 @@ function tutorPrompt(user,opening){
  return `You are ${TN()} (${TNJ()}), a warm, patient, encouraging female Japanese tutor in a course app that leads an English-speaking adult from zero to JLPT N1 so they can understand anime, J-dramas and news. The learner${S.set.name?', '+S.set.name+',':''} is currently at JLPT ${u.lv.name} level and types Japanese on a phone keyboard.
 Language-mix stage ${stage()} of 6 ("${st.name}"): ${st.rule}
 Use only grammar and vocabulary up to JLPT ${u.lv.name}, with at most 2 new words per turn.
-${STYLE()}
+${STYLE()}${stage()>=3?KANSAI_T():''}
 ${THINK}
 Scene: ${t.en} (${t.jp}). ${t.scene}
 Each turn: react to what the learner said, teach briefly, then ask ONE question they can answer. Keep turns short (2–5 lines). Default to polite です/ます unless the scene calls for casual speech.
@@ -1213,6 +1223,7 @@ function renderMe(){const all=allItems(),u=curUnit(),jv=jaVoices();
  <div class="set"><label for="sromaji">Romaji<small>Latin-letter spelling under Japanese</small></label><select id="sromaji">${['auto','on','off'].map(o=>`<option ${S.set.romaji===o?'selected':''} value="${o}">${o==='auto'?'Auto (early N5)':o==='on'?'Always':'Never'}</option>`).join('')}</select></div>
  <div class="set"><label for="seng">English translations<small>Hidden until tapped when off</small></label><select id="seng">${['auto','on','off'].map(o=>`<option ${S.set.english===o?'selected':''} value="${o}">${o==='auto'?'Auto (early N5)':o==='on'?'Always show':'Tap to reveal'}</option>`).join('')}</select></div>
  <div class="set"><label>Furigana<small>Small readings above kanji</small></label><button class="sw ${S.set.furi?'on':''}" id="sfuri" aria-label="Toggle furigana"></button></div>
+ <div class="set"><label for="sregion">Regional Japanese<small>Kansai adds Osaka &amp; Kyoto speech from N4: a Kansai corner in each unit, Kansai characters in scenes, and a Kyoto-born tutor in casual talk</small></label><select id="sregion"><option value="std" ${S.set.region!=='kansai'?'selected':''}>Standard only</option><option value="kansai" ${S.set.region==='kansai'?'selected':''}>Standard + Kansai (Osaka &amp; Kyoto)</option></select></div>
  <div class="set"><label for="slock">Conversation mix<small>Follows your unit, or pin a stage</small></label><select id="slock"><option value="0">Automatic</option>${STAGES.map((x,i)=>`<option value="${i+1}" ${S.set.lock===i+1?'selected':''}>${i+1}: ${x.name} (${x.mix}%)</option>`).join('')}</select></div>
  <div class="set"><label>Reset all progress<small>${resetArm?'Tap again to erase everything':'Units, cards, conversations'}</small></label><button class="btn alt" id="sreset" style="${resetArm?'background:var(--red);color:#fff':''}">${resetArm?'Confirm':'Reset'}</button></div>
  <p class="foot">${DICT?'The mic button uses your device’s speech recognition in Japanese.':'Voice input: use the microphone on your phone’s keyboard; Japanese keyboard dictation works too.'}</p>`}
@@ -1239,6 +1250,7 @@ $('#me').addEventListener('change',e=>{const t=e.target;
  if(t.id==='svoice'){S.set.voice=t.value;sayJa('こんにちは、ゆきです。よろしくお願いします。')}
  if(t.id==='sromaji')S.set.romaji=t.value;if(t.id==='seng')S.set.english=t.value;
  if(t.id==='slock'){S.set.lock=+t.value}
+ if(t.id==='sregion'){S.set.region=t.value;UNITS.forEach(x=>delete x.steps);if(S.topic==='kansai'&&!KS())S.topic='unit'}
  save();renderHead();renderMe()});
 
 /* ================= boot ================= */
