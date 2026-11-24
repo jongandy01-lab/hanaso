@@ -570,14 +570,16 @@ function go(v){view=v;stopSpeak();
  const el=$('#'+v);if(el&&v!=='talk')el.scrollTop=0;arm()}
 /* back button: step back through screens; leave the app only from the Path's top screen */
 const atRoot=()=>view==='path'&&!PSEL;
-function arm(){try{if(!atRoot()&&!(history.state&&history.state.hanaso))history.pushState({hanaso:1},'')}catch(e){}}
+function arm(){try{if(!(history.state&&history.state.hanaso))history.pushState({hanaso:1},'')}catch(e){}}
+let lastBack=0;
 function goBack(){
  if(view==='lesson'){const u=LZ&&LZ.u;stopSpeak();LZ=null;QZ=null;PSEL=u&&UBYID[u.id]?u.id:null;go('path');return}
  if(view==='review'&&REVTAB==='book'&&LIBSEL){if(LIBSEC!=null)LIBSEC=null;else LIBSEL=null;BK.data=null;BK.err='';renderLib();return}
  if(view==='review'&&REVTAB==='items'&&rv){rv=null;renderItems();return}
  if(view==='path'&&PSEL){PSEL=null;renderPath();return}
  if(view!=='path'){PSEL=null;go('path')}}
-window.addEventListener('popstate',()=>{goBack();arm()});
+window.addEventListener('popstate',()=>{if(atRoot()){if(Date.now()-lastBack<2500){try{history.back()}catch(e){}return}lastBack=Date.now();toast('Press back again to leave Hanasō');arm();return}goBack();arm()});
+document.addEventListener('pointerdown',()=>arm(),{once:true,capture:true});
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){if(b.dataset.v==='path')PSEL=null;go(b.dataset.v)}});
 
 /* ================= path ================= */
