@@ -567,7 +567,17 @@ function go(v){view=v;stopSpeak();
  document.querySelectorAll('#nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v||(v==='lesson'&&x.dataset.v==='path')));
  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.id===v));
  if(v==='path')renderPath();if(v==='talk'){renderTopics();renderLog()}if(v==='review')renderReview();if(v==='me')renderMe();if(v==='lesson')renderLesson();
- const el=$('#'+v);if(el&&v!=='talk')el.scrollTop=0}
+ const el=$('#'+v);if(el&&v!=='talk')el.scrollTop=0;arm()}
+/* back button: step back through screens; leave the app only from the Path's top screen */
+const atRoot=()=>view==='path'&&!PSEL;
+function arm(){try{if(!atRoot()&&!(history.state&&history.state.hanaso))history.pushState({hanaso:1},'')}catch(e){}}
+function goBack(){
+ if(view==='lesson'){const u=LZ&&LZ.u;stopSpeak();LZ=null;QZ=null;PSEL=u&&UBYID[u.id]?u.id:null;go('path');return}
+ if(view==='review'&&REVTAB==='book'&&LIBSEL){if(LIBSEC!=null)LIBSEC=null;else LIBSEL=null;BK.data=null;BK.err='';renderLib();return}
+ if(view==='review'&&REVTAB==='items'&&rv){rv=null;renderItems();return}
+ if(view==='path'&&PSEL){PSEL=null;renderPath();return}
+ if(view!=='path'){PSEL=null;go('path')}}
+window.addEventListener('popstate',()=>{goBack();arm()});
 $('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b){if(b.dataset.v==='path')PSEL=null;go(b.dataset.v)}});
 
 /* ================= path ================= */
@@ -616,7 +626,7 @@ $('#path').addEventListener('click',e=>{const rb=e.target.closest('[data-reset]'
  if(t.dataset.act==='next'){const u=curUnit();openStep(u,nextStep(u));return}
  if(t.dataset.act==='pback'){PSEL=null;return renderPath()}
  if(t.dataset.open){S.open=S.open===t.dataset.open?'':t.dataset.open;save();return renderPath()}
- if(t.dataset.u){PSEL=t.dataset.u;renderPath();$('#path').scrollTop=0;return}
+ if(t.dataset.u){PSEL=t.dataset.u;renderPath();$('#path').scrollTop=0;arm();return}
  if(t.dataset.step){const u=UBYID[PSEL];openStep(u,stepsOf(u).find(s=>s.id===t.dataset.step));return}
  if(t.dataset.exam)openExam(LVS.find(l=>l.id===t.dataset.exam));});
 
@@ -941,7 +951,7 @@ function renderReview(){const el=$('#review');
  REVTAB==='items'?renderItems():REVTAB==='kana'?renderKana():renderLib()}
 $('#review').addEventListener('click',e=>{const b=e.target.closest('#rtab button');if(b){REVTAB=b.dataset.r;rv=null;quiz=null;renderReview()}});
 const IV=[10*60e3,DAY,3*DAY,7*DAY,16*DAY,35*DAY,80*DAY];
-function startReview(){const d=dueItems().sort((a,b)=>(a.due||0)-(b.due||0)).slice(0,20);if(!d.length){toast('Nothing due. Nice work!');return}rv={q:d,i:0,shown:false};if(view==='review')renderItems()}
+function startReview(){const d=dueItems().sort((a,b)=>(a.due||0)-(b.due||0)).slice(0,20);if(!d.length){toast('Nothing due. Nice work!');return}rv={q:d,i:0,shown:false};arm();if(view==='review')renderItems()}
 function findBucket(it){for(const b in ITEMS)if(ITEMS[b].includes(it))return b;return null}
 function renderItems(){const body=$('#rbody');if(!body)return;const all=allItems(),due=dueItems();let h='';
  if(rv&&rv.i<rv.q.length){const v=rv.q[rv.i],isK=v.t==='k';
@@ -1057,7 +1067,7 @@ function renderLib(){const b=$('#rbody');if(!b)return;let h='';
   ${!lffDoc()?`<p class="foot" style="margin-top:4px">Tip: import 「${esc(BOOK)}」 (the EPUB edition from jw.org gives the cleanest text) and the Bible-lesson steps will use its real lesson text.</p>`:''}
   <ul class="wl">${LIB.map(d=>`<li><button class="w" style="text-align:left;min-height:44px" data-doc="${d.id}"><div class="wj" style="font-size:17px">${esc(d.title)}</div><div class="we">${d.kind.toUpperCase()} · ${d.sections.length} sections${d.lff?' · linked to lessons':''}</div></button><button class="mini" data-deldoc="${d.id}">${LIBDEL===d.id?'Delete?':'✕'}</button></li>`).join('')||'<li class="sub">No documents yet.</li>'}</ul>
   <h3>Quick study</h3>`+bookHTML()}
- b.innerHTML=h;const f=$('#libfile');if(f)f.onchange=()=>{if(f.files[0])importFile(f.files[0])}}
+ b.innerHTML=h;arm();const f=$('#libfile');if(f)f.onchange=()=>{if(f.files[0])importFile(f.files[0])}}
 $('#review').addEventListener('click',async e=>{if(REVTAB!=='book')return;const t=e.target.closest('[data-lib],[data-doc],[data-sec],[data-part],[data-deldoc]');if(!t)return;
  if(t.dataset.doc){LIBSEL=t.dataset.doc;LIBSEC=null;BK.data=null;return renderLib()}
  if(t.dataset.sec!=null){LIBSEC=+t.dataset.sec;LIBPART=0;BK.data=null;BK.err='';renderLib();$('#review').scrollTop=0;return}
