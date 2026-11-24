@@ -580,8 +580,8 @@ function renderPath(){
  const allDone=UNITS.every(passed);
  let h=`<div class="today"><div class="qstat" style="color:#c9d4f0"><span>Today · about 15–20 minutes</span><span>${streak()} day streak</span></div>
  <h3>${allDone?'You have finished the course. おめでとう!':`${esc(u.lv.name)} · ${esc(u.kana?u.t:'Unit '+u.num+': '+u.t)}`}</h3><p class="sub">${esc(u.jp||'')}</p>
- <ol class="plan">${due?`<li><b>1</b><span>Review ${due} card${due>1?'s':''} <small style="opacity:.7">(~${Math.max(2,Math.round(due/3))} min)</small></span></li>`:''}${allDone?'':`<li><b>${due?2:1}</b><span>${esc(stepLabel(s))}</span></li>`}</ol>
- <div class="row">${due?`<button class="btn" data-act="rev">Review ${due}</button>`:''}${allDone?'':`<button class="btn ${due?'alt':''}" data-act="next">${due?'Then: ':'Start: '}${esc(stepLabel(s).split(':')[0])}</button>`}<button class="btn alt" data-u="${u.id}">Unit</button></div></div>`;
+ <ol class="plan">${allDone?'':`<li><b>1</b><span>${esc(stepLabel(s))}</span></li>`}${due?`<li><b>${allDone?1:2}</b><span>Review ${due} card${due>1?'s':''} <small style="opacity:.7">(~${Math.max(2,Math.round(due/3))} min)</small></span></li>`:''}</ol>
+ <div class="row"><button class="btn alt" data-u="${u.id}">Unit overview</button>${allDone?'':`<button class="btn" data-act="next">Start: ${esc(stepLabel(s).split(':')[0])}</button>`}${due?`<button class="btn ${allDone?'':'alt'}" data-act="rev">Review ${due}</button>`:''}</div></div>`;
  h+=missHTML();
  if(!aiReady())h+=`<div class="notice" style="margin:0 0 14px">Kana and review work now. Lessons and conversation need your own AI. <button class="mini" data-goai="1">Set up your AI ›</button></div>`;
  h+=LVS.map(lv=>{const d=lvDone(lv),tot=lv.units.length,isCur=lv===u.lv,pass=S.levelPass[lv.id]!=null||d===tot;
