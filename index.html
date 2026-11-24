@@ -66,7 +66,7 @@ h2.t{font-size:28px;line-height:1.1;margin:4px 0 4px;text-wrap:balance}
 .card{background:var(--card);border-radius:16px;padding:16px}
 .btn{background:var(--red);color:#fff;border-radius:12px;padding:12px 18px;font-weight:700;min-height:46px;text-align:center}
 .btn.alt{background:var(--card);color:var(--ink);font-weight:500}
-.card .btn.alt{background:var(--bg);border:1px solid var(--line)}
+.card .btn.alt,.bub .btn.alt{background:var(--bg);border:1px solid var(--line)}
 .btn.blue{background:var(--ai)}
 .btn:disabled{opacity:.45}
 .btn.wide{width:100%}
@@ -869,6 +869,18 @@ let busy=false,errState=null;
 const bibleN=()=>S.bibleLesson||(curUnit().book||[1])[0];
 const topicKey=()=>S.topic==='unit'?'unit:'+curUnit().id:(S.topic==='bible'||S.topic==='teach')?S.topic+':'+(S.passage?'p:'+S.passage.title.slice(0,40):bibleN()):S.topic;
 const hist=()=>(S.hist[topicKey()]=S.hist[topicKey()]||[]);
+/* talk sessions: a finish line so practice doesn't become endless */
+const SESS_WORDS=8,SESS_MIN=3,SESS_USES=2,SESS_REPLIES=20;
+function sess(){S.sess=S.sess||{};const k=topicKey(),d=today();let x=S.sess[k];if(!x||x.day!==d)x=S.sess[k]={day:d,words:[],replies:0,done:false};
+ for(const key of Object.keys(S.sess))if(S.sess[key].day!==d&&key!==k)delete S.sess[key];return x}
+const usedIn=(text,w)=>{const t=norm(text);return!!t&&(t.includes(norm(plain(w.jp)))||(!!w.reading&&t.includes(norm(w.reading))))};
+const sessPracticed=x=>x.words.filter(w=>w.used>=SESS_USES).length;
+function sessCheck(x){if(!x.done&&((x.words.length>=SESS_MIN&&x.words.every(w=>w.used>=SESS_USES))||x.replies>=SESS_REPLIES)){x.done=true;return true}return false}
+function sessCard(x){const ws=x.words;return `<div class="msg"><svg class="seal"><use href="#seal"/></svg><div class="bub" style="border:2px solid var(--ok)"><p style="font-size:18px"><b>お疲{つか}れ様{さま}でした！</b></p>
+ <p>${x.replies>=SESS_REPLIES&&sessPracticed(x)<ws.length?`That's a full session: ${x.replies} replies today.`:`You've practiced all ${ws.length} of today's phrases.`} Stopping here helps it stick, and studying longer now is more likely to wear you out than help.</p>
+ ${ws.length?`<div class="vocab">${ws.map(w=>`<span class="vc">${ruby(w.jp)} · ${esc(w.en||'')}${w.used>=SESS_USES?' ✓':''}</span>`).join('')}</div>`:''}
+ <p style="margin-top:8px">Want to keep going? Review today's words, or practice kana and kanji instead.</p>
+ <div class="acts"><button class="btn" data-sess="review" style="padding:8px 14px;min-height:40px">Review today's words</button><button class="btn alt" data-sess="kana" style="padding:8px 14px;min-height:40px">Kana practice</button><button class="btn alt" data-sess="kanji" style="padding:8px 14px;min-height:40px">Kanji review</button></div></div></div>`}
 function renderTopics(){const u=curUnit();
  $('#topics').innerHTML=`<button class="tp unit ${S.topic==='unit'?'on':''}" data-t="unit">This unit<span class="kl">${esc(u.jp)}</span></button>`+TOPICS.filter(t=>t.id!=='kansai'||KS()).map(t=>`<button class="tp ${t.id===S.topic?'on':''}" data-t="${t.id}">${esc(t.en)}<span class="kl">${esc(t.jp)}</span></button>`).join('')}
 $('#uprog').addEventListener('click',e=>{if(e.target.id==='clrpass'){S.passage=null;errState=null;save();renderLog()}});
@@ -883,16 +895,19 @@ function yukiHTML(m,i){const blur=!showEnglish();
 function unitTalkCount(){return hist().filter(m=>m.role==='me').length}
 function renderLog(){
  const h=hist(),log=$('#log'),u=curUnit(),isU=S.topic==='unit';
- const up=$('#uprog');const isB=S.topic==='bible'||S.topic==='teach';up.hidden=!(isB||(isU&&!u.kana));
+ const up=$('#uprog');up.innerHTML='';const isB=S.topic==='bible'||S.topic==='teach';up.hidden=!(isB||(isU&&!u.kana));
  if(isB&&S.passage)up.innerHTML=`${S.topic==='teach'?'You explain':esc(TN())+' teaches'}: ${esc(S.passage.title)} <button class="mini" id="clrpass">✕ back to lessons</button>`;
  else if(isB)up.innerHTML=`${S.topic==='teach'?'You teach '+esc(TN())+' (she plays the student)':esc(TN())+' teaches you'} · <select id="blsel" style="max-width:62%;font-size:14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:3px">${LFF.map((x,i)=>`<option value="${i+1}" ${bibleN()===i+1?'selected':''}>${String(i+1).padStart(2,'0')} ${esc(x[1]||x[0])}</option>`).join('')}</select>`;
+ const sx=h.length?sess():null;
  if(!isB&&isU&&!u.kana){const tStep=stepsOf(u).find(s=>s.type==='talk');up.textContent=stepDone(u,tStep)?`Unit conversation complete ✓ Keep chatting as long as you like.`:`Unit conversation: ${Math.min(5,unitTalkCount())}/5 replies to complete this step`}
+ if(sx){up.hidden=false;const line=sx.done?'Today’s session complete ✓':`Today’s session: ${sessPracticed(sx)}/${Math.max(sx.words.length,SESS_MIN)} phrases practiced · ${sx.replies}/${SESS_REPLIES} replies`;up.insertAdjacentHTML('beforeend',`<div style="margin-top:${up.textContent.trim()?'2px':'0'}">${line}</div>`)}
  if(!h.length&&!busy){const t=isB&&S.passage?{en:S.topic==='teach'?'Explain this passage':'Study this passage',scene:`${S.passage.title}. ${S.topic==='teach'?`You explain it in Japanese; ${TN()} plays a curious listener and coaches your Japanese.`:`${TN()} goes through it with you in Japanese at your level.`}`}:isB?{en:S.topic==='teach'?'Teach lesson '+bibleN():'Bible lesson '+bibleN(),scene:S.topic==='teach'?`You lead the study of 「${lffTitle(bibleN())}」 in Japanese. ${TN()} plays a curious student and coaches your Japanese.`:`${TN()} studies 「${lffTitle(bibleN())}」 with you in Japanese at your level, then asks 復習 questions.`}:isU?{en:u.t,scene:u.kana?'Practice saying your first Japanese words with '+TN()+'.':'Practice '+u.g.slice(0,3).join(', ')+' while talking about '+u.th+'.'}:TOPICS.find(x=>x.id===S.topic);
   log.innerHTML=`<div class="welcome"><svg class="seal"><use href="#seal"/></svg><h2>${S.set.name?esc(S.set.name)+', ready':'Ready'} to talk: ${esc(t.en)}</h2><p>${esc(t.scene)}</p><button class="btn" id="start">Start conversation</button>${errState?`<div class="err" style="margin-top:14px">${esc(errState.msg)}</div>`:''}</div>`;
   $('#sug').innerHTML='';return}
  let out=h.map((m,i)=>m.role==='me'?`<div class="msg me"><div class="bub">${esc(m.text)}</div></div>`:yukiHTML(m,i)).join('');
  if(busy)out+=`<div class="msg"><svg class="seal"><use href="#seal"/></svg><div class="bub typing">${esc(TN())} is thinking <i></i><i></i><i></i></div></div>`;
  if(errState)out+=`<div class="err">${esc(errState.msg)} ${errState.retry?'<button class="mini" id="retry">Try again</button>':''}</div>`;
+ const sx2=h.length?sess():null;if(sx2&&sx2.done&&!busy){const at=sx2.doneIdx!=null?sx2.doneIdx:h.length;out=h.slice(0,at).map((m,i)=>m.role==='me'?`<div class="msg me"><div class="bub">${esc(m.text)}</div></div>`:yukiHTML(m,i)).join('')+sessCard(sx2)+h.slice(at).map((m,i)=>m.role==='me'?`<div class="msg me"><div class="bub">${esc(m.text)}</div></div>`:yukiHTML(m,i+at)).join('')+(errState?`<div class="err">${esc(errState.msg)}</div>`:'')}
  if(h.length>1&&!busy)out+=`<div style="text-align:center"><button class="mini" id="newc">New conversation</button></div>`;
  log.innerHTML=out;log.scrollTop=log.scrollHeight;
  const last=h[h.length-1];
@@ -902,7 +917,11 @@ $('#log').addEventListener('click',e=>{const j=e.target.closest('.ja'),tr=e.targ
  if(tr){tr.classList.remove('blur');return}
  if(e.target.closest('#start'))return ask('',true);
  if(e.target.closest('#retry')&&errState)return errState.retry();
- if(e.target.closest('#newc')){S.hist[topicKey()]=[];errState=null;save();return renderLog()}
+ if(e.target.closest('#newc')){S.hist[topicKey()]=[];if(S.sess)delete S.sess[topicKey()];errState=null;save();return renderLog()}
+ const sb=e.target.closest('[data-sess]');if(sb){const a=sb.dataset.sess,x=sess();
+  if(a==='review'){const keys=new Set(x.words.map(w=>norm(w.jp)));const its=allItems().filter(i=>i.t==='w'&&keys.has(norm(i.jp)));REVTAB='items';go('review');if(its.length){rv={q:its,i:0,shown:false};typeof arm==='function'&&arm();renderItems()}else toast('Those words are in your review deck.');return}
+  if(a==='kana'){REVTAB='kana';kmode='read';quiz=null;go('review');return}
+  if(a==='kanji'){REVTAB='items';go('review');const ks=allItems().filter(i=>i.t==='k');if(ks.length){rv={q:shuffle(ks).slice(0,20),i:0,shown:false};renderItems()}else toast('No kanji learned yet. They come with each Words & kanji step.');return}}
  const r=e.target.closest('[data-replay]');if(r)return speakMsg(hist()[+r.dataset.replay]);
  if(j)sayJa(j.dataset.say)});
 $('#sug').addEventListener('click',e=>{const b=e.target.closest('.sg');if(!b)return;sayJa(b.dataset.s);toast('Now say it: tap the mic.')});
@@ -924,6 +943,7 @@ Scene: ${t.en} (${t.jp}). ${t.scene}
 Each turn: react to what the learner said, teach briefly, then ask ONE question they can answer. Keep turns short (2–5 lines). Default to polite です/ます unless the scene calls for casual speech.
 MASTERED words (the learner has proven them in spaced review). Use them freely and often, and ALWAYS write them in Japanese: never translate, gloss or romanize them, not even inside English sentences, romaji fields or the "en" translations (e.g. "I'm drinking 水 today."): ${MW.join('、')||'none yet'}.${MK.length?`\nMastered kanji (write words using them in kanji): ${MK.join('')}.`:''}${mg?`\nGrammar from units the learner has passed: use it naturally without explaining it: ${mg}.`:''}
 Words the learner is still learning (use them to reinforce; a short gloss is fine): ${known||'none yet'}.
+${(()=>{const x=sess();if(x.done)return `TODAY'S SESSION IS COMPLETE (the learner has practiced all of today's phrases). Reply briefly and warmly, do not introduce new words ("vocab": []) and do not ask a new question; kindly encourage them to rest, or to review today's words and practice kana or kanji in the Review section instead of continuing to chat.`;return `Today's session phrases (get the learner to SAY each one in their own replies, at least twice each): ${x.words.map(w=>plain(w.jp)+(w.used>=SESS_USES?' (done)':' (used '+w.used+'×)')).join('、')||'none yet'}.${x.words.length>=SESS_WORDS?' The session has all its phrases: introduce NO new words ("vocab": []) and keep recycling these.':' Introduce at most '+(SESS_WORDS-x.words.length)+' more new words in total this session.'}`})()}
 Transcript so far:
 ${tr||'(nothing yet)'}
 
@@ -948,11 +968,15 @@ async function ask(text,opening,isRetry){
  try{const r=await SAMPLE.json(tutorPrompt(text,opening),{modelTier:'quick',cache:false});
   const m=normalizeMsg(r);if(!m)throw{code:'invalid_json'};
   h.push(m);if(h.length>40)h.splice(0,h.length-40);
+  const sx=sess();if(!opening){sx.replies++;if(m.score>=2)for(const w of sx.words)if(usedIn(text,w))w.used++}
+  for(const v of m.vocab){if(sx.words.length<SESS_WORDS&&!sx.words.some(w=>norm(w.jp)===norm(v.jp)))sx.words.push({jp:v.jp,reading:v.reading,en:v.en,used:0})}
+  const justDone=sessCheck(sx);if(justDone)sx.doneIdx=h.length;
   const u=curUnit(),b=S.topic==='unit'&&!u.kana?u.id:(S.topic==='bible'||S.topic==='teach')?'book':'talk';
   const nv=addItems(b,m.vocab.map(v=>({t:'w',...v})));
   if(!opening)gain(5+m.score*8+(hasJP(text)?5:0)+nv*2);else markDay();
   if(S.topic==='unit'&&!u.kana){const ts=stepsOf(u).find(s=>s.type==='talk');if(!stepDone(u,ts)&&unitTalkCount()>=5){markStep(u,ts,100);gain(15);toast('Conversation step complete ✓')}}
   save();busy=false;renderLog();renderHead();if(S.set.auto)speakMsg(m);
+  if(justDone){gain(20);setTimeout(()=>{if(S.set.auto)speak([...m.lines.filter(l=>l.lang==='ja'||stage()<=4).map(l=>({lang:l.lang,text:plain(l.text)})),{lang:'ja',text:'お疲れ様でした！'}]);const l=$('#log');l&&(l.scrollTop=l.scrollHeight)},50)}
  }catch(e){busy=false;const c=e&&e.code;
   errState={msg:c==='bad_key'?'Your AI key was rejected. Check it in Progress › Your AI.':c==='bad_model'?'That AI model wasn’t found. Pick another in Progress › Your AI.':c==='network'?'Couldn’t reach your AI provider. Check your connection.':c==='rate_limited'?'Too many messages for now. Try again in a minute.':c==='session_expired'?'Your Claude session expired. Sign in again.':'Yuki got tongue-tied on that one.',retry:c==='bad_key'?null:()=>ask(text,opening,true)};renderLog()}
  finally{$('#send').disabled=false}}
