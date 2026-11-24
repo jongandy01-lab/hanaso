@@ -439,7 +439,7 @@ const WORDS_K=[['コーヒー','koohii','coffee'],['パン','pan','bread'],['テ
 
 /* ================= state & storage ================= */
 const LSP='hanaso2:';
-const freshSet=()=>({region:'std',tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
+const freshSet=()=>({enMode:'ja',enVoice:'',region:'std',tutor:'Yuki',tutorJa:'ゆき',name:'',auto:true,rate:.9,voice:'',romaji:'auto',english:'auto',furi:true,lock:0});
 const fresh=()=>({v:2,updated:0,xp:0,done:{},unitPass:{},levelPass:{},attempts:{},topic:'unit',hist:{},kana:{},kanaOK:{h:0,k:0},kanaRows:['a'],script:'h',stats:{msgs:0,jp:0},days:[],buckets:['talk'],open:'n5',bibleLesson:0,set:freshSet()});
 const lsGet=k=>{try{return JSON.parse(localStorage.getItem(LSP+k)||'null')}catch(e){return null}};
 function lsSet(k,v){const s=JSON.stringify(v);try{localStorage.setItem(LSP+k,s)}catch(e){try{const cur=curUnit().id;Object.keys(localStorage).filter(x=>x.startsWith(LSP+'lesson-')&&!x.includes(cur)).forEach(x=>localStorage.removeItem(x));localStorage.setItem(LSP+k,s)}catch(e2){}}}
@@ -547,14 +547,19 @@ const voices=()=>{try{return speechSynthesis.getVoices()||[]}catch(e){return[]}}
 const jaVoices=()=>voices().filter(v=>/^ja/i.test(v.lang));
 function jaVoice(){const vs=jaVoices();return vs.find(v=>v.voiceURI===S.set.voice)||vs.find(v=>FEM.test(v.name))||vs.find(v=>!MALE.test(v.name))||vs[0]||null}
 const jaMale=()=>jaVoices().find(v=>MALE.test(v.name)&&!FEM.test(v.name))||null;
-function enVoice(){const vs=voices().filter(v=>/^en/i.test(v.lang));return vs.find(v=>ENF.test(v.name))||vs.find(v=>!MALE.test(v.name))||vs[0]||null}
+const enVoices=()=>voices().filter(v=>/^en/i.test(v.lang));
+function enVoice(){const vs=enVoices();return vs.find(v=>v.voiceURI===S.set.enVoice)||vs.find(v=>ENF.test(v.name))||vs.find(v=>!MALE.test(v.name))||vs[0]||null}
 function stopSpeak(){try{speechSynthesis.cancel()}catch(e){}try{TTS&&TTS.stop()}catch(e){}}
+const JPRUN=/[぀-ヿ㐀-鿿々ー〜！-～　-〿]+(?:[\s0-9]*[぀-ヿ㐀-鿿々ー〜！-～　-〿]+)*/g;
+function splitRuns(it){if(!it.text)return[];if(!/[A-Za-z]/.test(it.text))return[{...it,lang:'ja'}];if(!hasJP(it.text))return[{...it,lang:'en'}];
+ const out=[];let last=0;it.text.replace(JPRUN,(m,i)=>{const pre=it.text.slice(last,i);if(/[A-Za-z0-9]/.test(pre))out.push({...it,lang:'en',text:pre});out.push({...it,lang:'ja',text:m});last=i+m.length;return m});
+ const tail=it.text.slice(last);if(/[A-Za-z0-9]/.test(tail))out.push({...it,lang:'en',text:tail});return out}
 function speak(items){
- items=items.filter(i=>i.text&&i.text.trim());if(!items.length)return;stopSpeak();
+ items=items.filter(i=>i.text&&i.text.trim()).flatMap(splitRuns);if(!items.length)return;stopSpeak();
  const fv=jaVoice(),mv=jaMale();
  if('speechSynthesis' in window&&(fv||!TTS)){
-  items.forEach(it=>{const u=new SpeechSynthesisUtterance(it.text);const ja=it.lang!=='en';u.lang=ja?'ja-JP':'en-US';let v=ja?fv:enVoice(),p=1.08;
-   if(ja&&it.g==='m'){if(mv){v=mv;p=1}else p=.7}if(v)u.voice=v;u.pitch=p;u.rate=Math.max(.5,Math.min(1.6,(it.rate||S.set.rate)*(ja?1:1.05)));try{speechSynthesis.speak(u)}catch(e){}});
+  items.forEach(it=>{const u=new SpeechSynthesisUtterance(it.text);const ja=it.lang!=='en';u.lang=ja?'ja-JP':'en-US';let v=ja||S.set.enMode==='ja'?fv:enVoice(),p=1.08;if(!ja&&S.set.enMode==='ja'&&fv)u.lang=fv.lang;
+   if(ja&&it.g==='m'){if(mv){v=mv;p=1}else p=.7}if(v)u.voice=v;u.pitch=p;u.rate=Math.max(.5,Math.min(1.6,(it.rate||S.set.rate)*(ja||S.set.enMode==='ja'?1:1.05)));try{speechSynthesis.speak(u)}catch(e){}});
   return}
  if(TTS)TTS.speak(items.map(it=>({text:it.text,voice:it.g==='m'?'rounded':'airy',rate:Math.max(.7,Math.min(1.5,it.rate||S.set.rate)),language:it.lang==='en'?'en':'ja'}))).catch(()=>{});
 }
@@ -913,7 +918,7 @@ ${opening?'Begin now: greet the learner and open the scene.':'The learner just w
 
 Reply with ONLY one JSON object, shaped like:
 {"lines":[{"lang":"en","text":"English sentence"},{"lang":"ja","text":"日本語{にほんご}を話{はな}しましょう。","romaji":"nihongo o hanashimashou.","en":"Let's speak Japanese."}],"correction":null,"vocab":[{"jp":"話{はな}す","reading":"はなす","romaji":"hanasu","en":"to speak"}],"score":0,"suggest":["はい、お願{ねが}いします。"]}
-Rules: every kanji run is followed by its reading in braces, e.g. 買{か}います; never use braces otherwise. A "ja" line holds Japanese only. "vocab": only words NEW this turn. "score" rates the learner's last message: 0 English only or opening, 1 Japanese with mistakes, 2 correct, 3 natural. "correction": null unless their Japanese had a mistake or they used English/romaji at stage 3+; then {"said":"","better":"natural Japanese with readings","romaji":"","why":"one short reason"}. "suggest": 2–3 short replies they could send next, at their level.`}
+Rules: every kanji run is followed by its reading in braces, e.g. 買{か}います; never use braces otherwise. A "ja" line holds Japanese only. In "en" lines, write any Japanese word in Japanese script (kana, or kanji with readings), never in romaji, e.g. "In Japanese, hello is こんにちは."; romaji belongs only in the "romaji" fields. "vocab": only words NEW this turn. "score" rates the learner's last message: 0 English only or opening, 1 Japanese with mistakes, 2 correct, 3 natural. "correction": null unless their Japanese had a mistake or they used English/romaji at stage 3+; then {"said":"","better":"natural Japanese with readings","romaji":"","why":"one short reason"}. "suggest": 2–3 short replies they could send next, at their level.`}
 function normalizeMsg(r){
  if(!r||!Array.isArray(r.lines))return null;
  const lines=r.lines.filter(l=>l&&l.text).map(l=>({lang:l.lang==='ja'||(l.lang!=='en'&&hasJP(l.text))?'ja':'en',text:String(l.text),romaji:String(l.romaji||''),en:String(l.en||'')}));
@@ -1220,6 +1225,8 @@ function renderMe(){const all=allItems(),u=curUnit(),jv=jaVoices();
  <div class="set"><label>Speak replies aloud<small>${esc(TN())} reads each reply automatically</small></label><button class="sw ${S.set.auto?'on':''}" id="sauto" aria-label="Toggle auto-speak"></button></div>
  <div class="set"><label for="srate">Speaking speed<small>${S.set.rate.toFixed(2)}× (listening scenes also speed up by level)</small></label><input type="range" id="srate" min="0.6" max="1.2" step="0.05" value="${S.set.rate}"></div>
  <div class="set"><label for="svoice">${esc(TN())}'s voice<small>${jv.length?'Female Japanese voices are picked first':'No Japanese voice on this device; add one in your phone’s speech settings'}</small></label><select id="svoice"><option value="">Auto (female)</option>${jv.map(v=>`<option value="${esc(v.voiceURI)}" ${v.voiceURI===S.set.voice?'selected':''}>${esc(v.name)}</option>`).join('')}</select></div>
+ <div class="set"><label for="senmode">English in replies<small>${S.set.enMode==='ja'?'Read by the same Japanese voice, so there is one voice throughout':'Read by a separate English voice; Japanese words are always read by the Japanese voice'}</small></label><select id="senmode"><option value="ja" ${S.set.enMode==='ja'?'selected':''}>${esc(TN())}'s Japanese voice</option><option value="en" ${S.set.enMode==='en'?'selected':''}>An English voice</option></select></div>
+ ${S.set.enMode==='en'?`<div class="set"><label for="senvoice">English voice</label><select id="senvoice"><option value="">Auto (female)</option>${enVoices().map(v=>`<option value="${esc(v.voiceURI)}" ${v.voiceURI===S.set.enVoice?'selected':''}>${esc(v.name)}</option>`).join('')}</select></div>`:''}
  <div class="set"><label for="sromaji">Romaji<small>Latin-letter spelling under Japanese</small></label><select id="sromaji">${['auto','on','off'].map(o=>`<option ${S.set.romaji===o?'selected':''} value="${o}">${o==='auto'?'Auto (early N5)':o==='on'?'Always':'Never'}</option>`).join('')}</select></div>
  <div class="set"><label for="seng">English translations<small>Hidden until tapped when off</small></label><select id="seng">${['auto','on','off'].map(o=>`<option ${S.set.english===o?'selected':''} value="${o}">${o==='auto'?'Auto (early N5)':o==='on'?'Always show':'Tap to reveal'}</option>`).join('')}</select></div>
  <div class="set"><label>Furigana<small>Small readings above kanji</small></label><button class="sw ${S.set.furi?'on':''}" id="sfuri" aria-label="Toggle furigana"></button></div>
@@ -1248,6 +1255,8 @@ $('#me').addEventListener('change',e=>{const t=e.target;
  if(t.id==='stutorja')S.set.tutorJa=t.value.trim().slice(0,10)||'ゆき';
  if(t.id==='srate'){S.set.rate=+t.value;sayJa('こんにちは、ゆきです。')}
  if(t.id==='svoice'){S.set.voice=t.value;sayJa('こんにちは、ゆきです。よろしくお願いします。')}
+ if(t.id==='senmode'){S.set.enMode=t.value;speak([{lang:'en',text:'Hello! In Japanese, we say こんにちは.'}])}
+ if(t.id==='senvoice'){S.set.enVoice=t.value;speak([{lang:'en',text:'Hello! In Japanese, we say こんにちは.'}])}
  if(t.id==='sromaji')S.set.romaji=t.value;if(t.id==='seng')S.set.english=t.value;
  if(t.id==='slock'){S.set.lock=+t.value}
  if(t.id==='sregion'){S.set.region=t.value;UNITS.forEach(x=>delete x.steps);if(S.topic==='kansai'&&!KS())S.topic='unit'}
