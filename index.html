@@ -501,7 +501,7 @@ function stepSub(s,u){const lv=u.lv;switch(s.type){
  case 'klearn':return 'Tap letters to hear them, trace them';
  case 'kprac':return `Read and write quizzes · ${Math.min(40,S.kanaOK[u.kana]||0)}/40 correct`;
  case 'kdrill':return `All ${ALLK.length} letters · see the sound, pick the letter`;
- case 'ktest':return `Type all ${ALLK.length} letters · pass with 100%`}return ''}
+ case 'ktest':return `Write all ${ALLK.length} letters freehand · pass with 100%`}return ''}
 function markStep(u,s,score){const k=skey(u,s);S.done[k]=Math.max(S.done[k]||0,score);save()}
 
 const TN=()=>S.set.tutor||'Yuki';
@@ -725,7 +725,7 @@ function openStep(u,s){
  if(s.type==='talk'){S.topic='unit';save();go('talk');return}
  LZ={u,s,phase:'loading',i:0};go('lesson');
  if(s.type==='ktest'){const kk=u.kana==='k';const tip={'ぢ':' (ち row + ゛)','づ':' (つ row + ゛)','じ':' (し row + ゛)','ず':' (す row + ゛)'};
-  const qs=shuffle(ALLK).map(k=>{const ch=kk?toKata(k.h):k.h;return{kind:'type',exact:true,ph:kk?'カタカナ':'ひらがな',promptHTML:`<span class="wbig">${esc(k.r)}</span>`,sub:`Type it in ${kk?'katakana':'hiragana'}${tip[k.h]||''}`,accept:[ch],reveal:`<span class="kl" style="font-size:44px">${ch}</span>`,sayAfter:ch,kq:{ch,sk:'w'},mk:{t:'kana',ch,r:k.r,h:k.h,sc:u.kana}}});
+  const qs=shuffle(ALLK).map(k=>{const ch=kk?toKata(k.h):k.h;return{kind:'draw',ch,promptHTML:`<span class="wbig">${esc(k.r)}</span>`,sub:`Write it in ${kk?'katakana':'hiragana'}${tip[k.h]||''}`,sayAfter:ch,kq:{ch,sk:'w'},noPenalty:true,mk:{t:'kana',ch,r:k.r,h:k.h,sc:u.kana}}});
   LZ.phase='quiz';startQuiz(qs,{pass:qs.length,onDone:(r,t)=>finishTest(r,t)});return}
  if(s.type==='kdrill'){const pool=shuffle(ALLK);
   const kk=u.kana==='k',cv=h=>kk?toKata(h):h;const qs=pool.map(k=>{const ch=cv(k.h);const c=shuffle(rowKana(k).map(cv));return{kind:'mc',promptHTML:`<span class="wbig">${esc(k.r)}</span>`,sub:`Pick the ${kk?'katakana':'hiragana'}`,choices:c,answer:c.indexOf(ch),sayAfter:ch,plainChoices:true,kanaChoices:true,kq:{ch,sk:'r'}}});
@@ -751,11 +751,37 @@ function quizHTML(){const q=QZ.qs[QZ.i];if(!q)return'';
  if(q.passage)h+=`<div class="passage">${ruby(q.passage)}</div>`;
  if(q.audio)h+=`<button class="play" data-act="qaudio"><svg><use href="#playi"/></svg><span>Play the audio<small>Listen, then answer. Replay as often as you like.</small></span></button>`;
  h+=`<div class="qq">${q.promptHTML}</div>${q.sub?`<div class="sub">${q.sub}</div>`:''}`;
- if(q.kind==='type'){h+=`<input class="ans" id="qin" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="${q.ph||'ひらがな'}" ${QZ.answered?'disabled':''} value="${esc(QZ.typed||'')}">${QZ.answered?'':'<div class="nav2"><button class="btn alt" data-act="qskip">Show me</button><button class="btn" data-act="qcheck">Check</button></div>'}`}
+ if(q.kind==='draw'){h+=drawQHTML(q)}
+ else if(q.kind==='type'){h+=`<input class="ans" id="qin" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="${q.ph||'ひらがな'}" ${QZ.answered?'disabled':''} value="${esc(QZ.typed||'')}">${QZ.answered?'':'<div class="nav2"><button class="btn alt" data-act="qskip">Show me</button><button class="btn" data-act="qcheck">Check</button></div>'}`}
  else h+=`<div class="opts ${long?'one':''}" ${q.plainChoices&&q.choices.length<=5?`style="grid-template-columns:repeat(${q.choices.length},minmax(0,1fr));gap:6px"`:''}>${q.choices.map((c,j)=>{let cl='';if(QZ.answered){if(j===q.answer)cl='good';else if(j===QZ.picked)cl='bad'}return `<button class="op ${cl}" data-act="qpick" data-j="${j}" ${QZ.answered?'disabled':''}${q.kanaChoices?' style="font-family:Klee One,serif;font-size:28px"':''}>${q.plainChoices?esc(c):ruby(c)}</button>`}).join('')}</div>`;
- if(QZ.answered){const ok=QZ.res[QZ.i];h+=`<div class="fb ${ok?'good':'bad'}">${ok?'正解! Correct':'Not quite'}${q.kind==='type'||!ok?'':''}</div>${q.reveal?`<div class="why" style="color:var(--ink);font-size:17px">${q.reveal}</div>`:''}${q.why?`<div class="why">${esc(q.why)}</div>`:''}<button class="btn wide" data-act="qnext">${QZ.i+1<QZ.qs.length?'Next':'See results'}</button>`}
+ if(QZ.answered){const ok=QZ.res[QZ.i];h+=`<div class="fb ${ok?'good':'bad'}">${q.kind==='draw'?(q.res||''):ok?'正解! Correct':'Not quite'}${q.kind==='type'||!ok?'':''}</div>${q.reveal?`<div class="why" style="color:var(--ink);font-size:17px">${q.reveal}</div>`:''}${q.why?`<div class="why">${esc(q.why)}</div>`:''}<button class="btn wide" data-act="qnext">${QZ.i+1<QZ.qs.length?'Next':'See results'}</button>`}
  return h}
-function quizAnswer(ok){QZ.answered=true;QZ.res[QZ.i]=ok;if(ok)QZ.right++;const q=QZ.qs[QZ.i];if(q.kq){recK(q.kq.ch,q.kq.sk,ok);save()}if(q.sayAfter)sayJa(q.sayAfter);renderLesson()}
+/* freehand writing questions (stroke order checked, no guide, one hint) */
+let DQ=null;
+function drawQHTML(q){const n=(KST[q.ch]||[]).length;return `<div class="trwrap" style="margin-top:12px"><svg id="qsvg" viewBox="0 0 109 109" style="position:absolute;inset:0;width:100%;height:100%;color:var(--ink)"></svg><canvas id="qc"></canvas><svg id="qsamp" viewBox="0 0 109 109" style="position:absolute;width:0;height:0;opacity:0" aria-hidden="true">${(KST[q.ch]||[]).map(d=>`<path d="${d}"/>`).join('')}</svg></div>
+ <div class="fb" id="qmsg" style="min-height:22px;text-align:center"></div>${QZ.answered?'':`<div class="nav2"><button class="btn alt" data-act="qhint" ${DQ&&DQ.q===q&&DQ.hint?'disabled':''}>Hint: next stroke</button><button class="btn alt" data-act="qgive">I don’t know</button></div><p class="foot" style="text-align:center;margin-top:6px">${n} stroke${n===1?'':'s'} · one hint per answer</p>`}`}
+function drawQSVG(){const q=DQ.q,ss=KST[q.ch]||[];const grid=`<path d="M54.5 0V109M0 54.5H109" stroke="rgba(217,61,39,.35)" stroke-width=".5" stroke-dasharray="3 3"/>`;
+ if(QZ.answered){const ok=QZ.res[QZ.i];return grid+`<g fill="none" stroke="${ok?'currentColor':'#d93d27'}" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">${ss.map((d,i)=>`<path d="${d}" ${ok?'':`pathLength="1" style="stroke-dasharray:1;stroke-dashoffset:1;animation:tdraw .6s ${i*.7}s forwards"`}/>`).join('')}</g>`}
+ const ink=`<g fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round">${ss.slice(0,DQ.done).map(d=>`<path d="${d}"/>`).join('')}</g>`;
+ const hint=DQ.hintIdx===DQ.done&&ss[DQ.done]?`<path d="${ss[DQ.done]}" fill="none" stroke="rgba(217,61,39,.5)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 3"/><circle cx="${DQ.samp[DQ.done].pts[0][0]}" cy="${DQ.samp[DQ.done].pts[0][1]}" r="3.4" fill="#d93d27"/>`:'';
+ return grid+ink+hint}
+function qmsg(t,bad){const m=$('#qmsg');if(m){m.className='fb '+(bad?'bad':'good');m.textContent=t}}
+function mountDrawQ(q){if(!DQ||DQ.q!==q)DQ={q,done:0,err:0,hint:false,hintIdx:-1};
+ const samp=$('#qsamp');DQ.samp=samp?[...samp.querySelectorAll('path')].map(p=>{const L=p.getTotalLength(),n=24;return{len:L,pts:[...Array(n)].map((_,i)=>{const t=p.getPointAtLength(L*i/(n-1));return[t.x,t.y]})}}):[];
+ const sv=$('#qsvg');if(sv)sv.innerHTML=drawQSVG();if(QZ.answered)return;
+ const c=$('#qc');let ctx=null,pts=null,live=false;
+ const size=()=>{const r=c.getBoundingClientRect(),d=devicePixelRatio||1;if(!r.width)return;c.width=r.width*d;c.height=r.height*d;ctx=c.getContext('2d');ctx.scale(d,d);ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=Math.max(6,r.width/26);ctx.strokeStyle=getComputedStyle(document.body).color};
+ if(tro)tro.disconnect();tro=new ResizeObserver(size);tro.observe(c);
+ const pos=e=>{const r=c.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top,(e.clientX-r.left)/r.width*TSZ,(e.clientY-r.top)/r.height*TSZ]};
+ c.onpointerdown=e=>{if(QZ.answered||!DQ.samp[DQ.done])return;live=true;c.setPointerCapture(e.pointerId);const p=pos(e);pts=[[p[2],p[3]]];ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(p[0]+.1,p[1]+.1);ctx.stroke()};
+ c.onpointermove=e=>{if(!live)return;const p=pos(e);pts.push([p[2],p[3]]);ctx.lineTo(p[0],p[1]);ctx.stroke()};
+ c.onpointerup=c.onpointercancel=()=>{if(!live)return;live=false;const r=c.getBoundingClientRect();ctx.clearRect(0,0,r.width,r.height);
+  const e=DQ.samp[DQ.done];if(pts.length<2)pts=[pts[0],[pts[0][0]+.5,pts[0][1]+.5]];
+  if(fits(strokeFit(pts,e),e)){DQ.done++;if(DQ.done>=DQ.samp.length){const ok=!DQ.err&&!DQ.hint;q.res=ok?'正解! Written correctly':DQ.hint&&!DQ.err?'Written with a hint':`Finished with ${DQ.err} wrong stroke${DQ.err===1?'':'s'}`;q.why2={err:DQ.err,hint:DQ.hint,give:false};return quizAnswer(ok)}
+   qmsg(`Stroke ${DQ.done} ✓`,false)}
+  else{DQ.err++;qmsg(`Not quite. Try stroke ${DQ.done+1} again.`,true)}
+  $('#qsvg').innerHTML=drawQSVG()}}
+function quizAnswer(ok){QZ.answered=true;QZ.res[QZ.i]=ok;if(ok)QZ.right++;const q=QZ.qs[QZ.i];if(q.kq&&(ok||!q.noPenalty)){recK(q.kq.ch,q.kq.sk,ok);save()}if(q.sayAfter)sayJa(q.sayAfter);renderLesson()}
 function quizNext(){QZ.i++;QZ.answered=false;QZ.picked=null;QZ.typed='';if(QZ.i>=QZ.qs.length){const r=QZ.right,t=QZ.qs.length;QZ.onDone(r,t)}else{renderLesson();const q=QZ.qs[QZ.i];if(q.audio)setTimeout(()=>speakAudio(q.audio),250);const n=$('#qin');n&&n.focus()}}
 function speakAudio(t){speak([{lang:'ja',text:t,rate:(LZ&&LZ.u?LZ.u.lv.rate:1)*S.set.rate/.9}])}
 
@@ -798,11 +824,11 @@ function recordMisses(src,title){S.miss=S.miss||[];QZ.qs.forEach((q,i)=>{if(QZ.r
   const it=q.mk?{...q.mk}:{t:'q',q:{kind:q.kind,promptHTML:q.promptHTML,sub:q.sub||'',passage:q.passage||'',audio:q.audio||'',choices:q.choices,answer:q.answer,accept:q.accept,exact:q.exact,ph:q.ph,reveal:q.reveal||'',why:q.why||'',plainChoices:!!q.plainChoices,section:q.section||''}};
   it.key=it.t==='kana'?'k:'+it.ch:'q:'+(q.promptHTML||'').slice(0,120)+(q.passage||'').slice(0,40);if(S.miss.some(m=>m.key===it.key))return;
   it.id='m'+Date.now().toString(36)+i;it.src=src;it.title=title;it.ok=0;S.miss.push(it)});if(S.miss.length>300)S.miss=S.miss.slice(-300);save()}
-function missQuestion(m){if(m.t==='kana'){const kk=m.sc==='k';return Math.random()<.5?{kind:'type',exact:true,ph:kk?'カタカナ':'ひらがな',promptHTML:`<span class="wbig">${esc(m.r)}</span>`,sub:`Type it in ${kk?'katakana':'hiragana'}`,accept:[m.ch],reveal:`<span class="kl" style="font-size:44px">${m.ch}</span>`,sayAfter:m.ch,mid:m.id,kq:{ch:m.ch,sk:'w'}}
+function missQuestion(m){if(m.t==='kana'){const kk=m.sc==='k';return Math.random()<.75?{kind:'draw',ch:m.ch,promptHTML:`<span class="wbig">${esc(m.r)}</span>`,sub:`Write it in ${kk?'katakana':'hiragana'}`,sayAfter:m.ch,mid:m.id,kq:{ch:m.ch,sk:'w'}}
   :(()=>{const kk=ALLK.find(x=>x.h===m.h)||{row:'a',r:m.r};const c=shuffle(rowOpts(kk));return{kind:'mc',promptHTML:`<span class="kbig">${m.ch}</span>`,choices:c,answer:c.indexOf(m.r),sayAfter:m.ch,plainChoices:true,mid:m.id,kq:{ch:m.ch,sk:'r'}}})()}
  const q={...m.q,mid:m.id};if(q.kind==='mc'&&q.choices){const idx=shuffle(q.choices.map((_,i)=>i));q.answer=idx.indexOf(q.answer);q.choices=idx.map(i=>m.q.choices[i])}return q}
-function openMiss(){const list=shuffle(S.miss||[]).slice(0,20);if(!list.length){toast('Nothing to fix. Nice work!');return}
- LZ={u:{lv:curUnit().lv,id:'miss',t:'Missed material',jp:'ミスの復習'},s:{id:'miss',type:'miss'},phase:'quiz'};go('lesson');
+function openMiss(src){const list=shuffle((S.miss||[]).filter(m=>!src||m.src===src)).slice(0,src?80:20);if(!list.length){toast('Nothing to fix. Nice work!');return}
+ LZ={u:{lv:curUnit().lv,id:'miss',t:src?'Focus practice':'Missed material',jp:'ミスの復習'},s:{id:'miss',type:'miss'},phase:'quiz',focusSrc:src||null};go('lesson');
  startQuiz(list.map(missQuestion),{onDone:(r,t)=>{let cleared=0;QZ.qs.forEach((q,i)=>{const m=S.miss.find(x=>x.id===q.mid);if(!m)return;if(QZ.res[i]){m.ok++;if(m.ok>=2){S.miss=S.miss.filter(x=>x!==m);cleared++}}else m.ok=0});gain(r);save();renderHead();LZ.phase='done';LZ.score=Math.round(r/t*100);LZ.cleared=cleared;renderLesson()}})}
 function missHTML(){const ms=S.miss||[];if(!ms.length)return'';const by={};ms.forEach(m=>{by[m.title]=(by[m.title]||0)+1});
  return `<div class="card" style="border:2px solid var(--red);margin-bottom:14px"><div class="tline"><b style="font-size:18px">Missed material</b><span class="pill red">${ms.length} to fix</span></div><p class="sub" style="margin:4px 0 10px">Things you missed on tests: ${Object.entries(by).map(([k,v])=>esc(k)+' ('+v+')').join(', ')}. Get each one right twice to clear it.</p><button class="btn wide" data-act="miss">Drill missed material</button></div>`}
@@ -824,16 +850,23 @@ function renderLesson(){const el=$('#lesson');if(!LZ){el.innerHTML='';return}
   <button class="play" data-act="lplay"><svg><use href="#playi"/></svg><span>Play the scene<small>${(d.cast||[]).map(c=>esc(c.name)).join(' · ')} · speed ${u.lv.rate}×</small></span></button>`;
   if(LZ.phase==='listen'){h+=`<p class="sub">Listen first, without reading. Replay as often as you need, then answer.</p>`+quizHTML()+`<p style="text-align:center"><button class="mini" data-act="lpeek">Stuck? Show the transcript</button></p>`;if(LZ.peek)h+=transcriptHTML(d)}
   else h+=`<div class="card" style="text-align:center;margin:12px 0"><div class="score">${LZ.score}%</div><div class="sub" style="margin:0">comprehension</div></div><h3>Transcript</h3><p class="sub">Tap a line to hear it again.</p>`+transcriptHTML(d)+`${isB&&d.matome?`<h3>まとめ</h3><div class="ex" data-say="${esc(plain(d.matome))}"><div class="jt">${ruby(d.matome)}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(d.matomeEn||'')}</div></div>`:''}${isB&&(LZ.rev||[]).length?`<h3>復習: answer in Japanese</h3><p class="sub">Say or type your answer first, then compare with the model.</p>${LZ.rev.map((r,i)=>`<div class="card" style="margin-bottom:10px"><div class="jt" style="font-size:18px" data-say="${esc(plain(r.q))}">${ruby(r.q)}</div><textarea class="search" style="margin:8px 0;min-height:70px" lang="ja" data-rv="${i}" placeholder="日本語で答えてみましょう">${esc(r.mine||'')}</textarea>${r.show?`<div class="ex" data-say="${esc(plain(r.model))}"><div class="jt">${ruby(r.model||'')}</div><div class="tr ${showEnglish()?'':'blur'}">${esc(r.en||'')}</div></div>`:`<button class="btn alt" data-act="rvshow" data-i="${i}">Show model answer</button>`}</div>`).join('')}<button class="btn blue wide" data-act="teachit">Practice teaching this lesson to ${esc(TN())} ›</button>`:''}${(d.vocab||[]).length?`<h3>Key words (added to review)</h3><div class="vocab">${d.vocab.map(v=>`<span class="vc">${ruby(v.jp)} · ${esc(v.en)}</span>`).join('')}</div>`:''}<div class="nav2"><button class="btn alt" data-act="lback">Back to unit</button><button class="btn" data-act="nextstep">Next step ›</button></div>`;
- }else if(s.type==='miss'){h+=LZ.phase==='quiz'?`<h2 class="t" style="margin-top:8px">Missed material</h2><p class="sub">Each item clears after you get it right twice.</p>`+quizHTML():`<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px"><use href="#seal"/></svg><div class="score">${LZ.score}%</div><p class="sub" style="margin:0">${LZ.cleared} cleared · ${(S.miss||[]).length} still to fix</p></div><div class="nav2"><button class="btn alt" data-act="lback">Back to path</button>${(S.miss||[]).length?'<button class="btn" data-act="missagain">Drill again</button>':''}</div>`;
+ }else if(s.type==='miss'){h+=LZ.phase==='quiz'?`<h2 class="t" style="margin-top:8px">${esc(LZ.u.t)}</h2><p class="sub">Each item clears after you get it right twice.</p>`+quizHTML():`<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px"><use href="#seal"/></svg><div class="score">${LZ.score}%</div><p class="sub" style="margin:0">${LZ.cleared} cleared · ${(S.miss||[]).length} still to fix</p></div><div class="nav2"><button class="btn alt" data-act="lback">Back to path</button>${(S.miss||[]).length?'<button class="btn" data-act="missagain">Drill again</button>':''}</div>`;
  }else if(s.type==='kdrill'){h+=LZ.phase==='quiz'?`<h2 class="t" style="margin-top:8px">${esc(u.t)} drill</h2><p class="sub">See the sound, pick the letter.</p>`+quizHTML():doneHTML(`${LZ.score}% on the drill. When you’re ready, take the typed test.`);
  }else if(s.type==='test'||s.type==='ktest'||s.type==='exam'){
-  if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">${s.type==='exam'?esc(LZ.exam.name)+' mock exam':s.type==='ktest'?esc(u.t)+' test: type each letter':'Unit test: '+esc(u.t)}</h2><p class="sub">Pass mark ${QZ.pass} of ${QZ.qs.length}</p>`+quizHTML();
+  if(LZ.phase==='quiz')h+=`<h2 class="t" style="margin-top:8px">${s.type==='exam'?esc(LZ.exam.name)+' mock exam':s.type==='ktest'?esc(u.t)+' test: write each letter':'Unit test: '+esc(u.t)}</h2><p class="sub">Pass mark ${QZ.pass} of ${QZ.qs.length}</p>`+quizHTML();
   else{const miss=QZ.qs.map((q,i)=>({q,ok:QZ.res[i]})).filter(x=>!x.ok);
    h+=`<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px;${LZ.passed?'':'filter:grayscale(1);opacity:.4'}"><use href="#seal"/></svg><div class="score">${LZ.score}%</div><div style="font-weight:700">${LZ.passed?(s.type==='exam'?'合格! Level passed':'Passed!'):'Not yet. Review and try again'}</div></div>`;
-   if(miss.length)h+=`<h3>Review your misses</h3>`+miss.map(({q})=>`<div class="miss">${q.passage?`<div class="tr">${ruby(q.passage).slice(0,400)}</div>`:''}${q.audio?`<div class="tr">Audio: ${esc(q.audio)}</div>`:''}<div>${q.promptHTML}</div><div><b style="color:var(--ok)">${q.kind==='type'?(q.reveal||esc(q.accept[0])):q.plainChoices?esc(q.choices[q.answer]):ruby(q.choices[q.answer])}</b></div>${q.why?`<div class="why">${esc(q.why)}</div>`:''}</div>`).join('');
+   if(s.type==='ktest')h+=reportCard(u);
+   else if(miss.length)h+=`<h3>Review your misses</h3>`+miss.map(({q})=>`<div class="miss">${q.passage?`<div class="tr">${ruby(q.passage).slice(0,400)}</div>`:''}${q.audio?`<div class="tr">Audio: ${esc(q.audio)}</div>`:''}<div>${q.promptHTML}</div><div><b style="color:var(--ok)">${q.kind==='type'?(q.reveal||esc(q.accept[0])):q.plainChoices?esc(q.choices[q.answer]):ruby(q.choices[q.answer])}</b></div>${q.why?`<div class="why">${esc(q.why)}</div>`:''}</div>`).join('');
    h+=`<div class="nav2">${LZ.passed?`<button class="btn" data-act="${s.type==='exam'?'lback':'nextunit'}">${s.type==='exam'?'Back to path':'Next unit ›'}</button>`:`<button class="btn alt" data-act="missagain">Drill misses</button><button class="btn" data-act="retake">Retake</button>`}</div>`}
  }
- el.innerHTML=h}
+ el.innerHTML=h;if(QZ&&LZ&&(LZ.phase==='quiz'||LZ.phase==='listen')){const q=QZ.qs[QZ.i];if(q&&q.kind==='draw')mountDrawQ(q)}}
+function reportCard(u){const rows=QZ.qs.map((q,i)=>({q,ok:QZ.res[i],w:q.why2||{}}));const weak=rows.filter(r=>!r.ok);
+ const n=rows.length,hint=weak.filter(r=>r.w.hint&&!r.w.give).length,give=weak.filter(r=>r.w.give).length,err=weak.length-hint-give;
+ let h=`<h3>Report card</h3><div class="stats" style="margin-top:6px"><div class="st"><b>${n-weak.length}</b><span>written correctly</span></div><div class="st"><b>${err}</b><span>wrong strokes</span></div><div class="st"><b>${hint}</b><span>needed the hint</span></div><div class="st"><b>${give}</b><span>didn’t know</span></div></div>`;
+ if(weak.length)h+=`<p class="sub" style="margin:4px 0 8px">Weak kana. Tap one to hear it. These don’t count against your mastery.</p><div class="grid">${weak.map(r=>`<button class="kc m3" data-say="${esc(r.q.ch)}"><b>${esc(r.q.ch)}</b><small>${esc(r.q.mk?r.q.mk.r:'')} · ${r.w.give?'didn’t know':r.w.hint&&!r.w.err?'hint':'strokes'}</small></button>`).join('')}</div>
+  <div class="nav2"><button class="btn blue" data-act="focus">Focus practice: these ${weak.length} kana</button></div>`;
+ else h+=`<p class="sub">No weak kana. Every letter written correctly from memory.</p>`;return h}
 function doneHTML(msg){return `<div class="card" style="text-align:center;margin-top:12px"><svg class="seal" style="width:72px;height:72px"><use href="#seal"/></svg><h2 class="t">よくできました!</h2><p class="sub" style="margin:0">${esc(msg)}</p></div><div class="nav2"><button class="btn alt" data-act="lback">Back to unit</button><button class="btn" data-act="nextstep">Next step ›</button></div>`}
 function transcriptHTML(d){const g={};(d.cast||[]).forEach(c=>g[c.name]=c.gender);return (d.lines||[]).map((l,i)=>`<div class="line" data-line="${i}"><div class="who">${esc(l.who||'')}</div><div><div class="jt">${ruby(l.jp||'')}</div>${showRomaji()&&l.romaji?`<div class="rm">${esc(l.romaji)}</div>`:''}<div class="tr ${showEnglish()?'':'blur'}">${esc(l.en||'')}</div></div></div>`).join('')}
 function sceneItems(d,only){const g={};(d.cast||[]).forEach(c=>g[c.name]=c.gender);const r=LZ.u.lv.rate*S.set.rate/.9;return (d.lines||[]).filter((_,i)=>only==null||i===only).map(l=>({lang:'ja',text:plain(l.jp),g:g[l.who]||'f',rate:r}))}
@@ -843,7 +876,8 @@ $('#lesson').addEventListener('click',e=>{
  if(!t){if(ln)speak(sceneItems(LZ.data,+ln.dataset.line));else if(sayEl)sayJa(sayEl.dataset.say);return}
  const a=t.dataset.act;
  if(a==='lback'){stopSpeak();const u=LZ.u;LZ=null;PSEL=UBYID[u.id]?u.id:null;go('path');return}
- if(a==='missagain')return openMiss();
+ if(a==='focus'){const src=LZ.u.id;return openMiss(src)}
+ if(a==='missagain')return openMiss(LZ&&LZ.focusSrc||undefined);
  if(a==='retry')return LZ.exam?loadExam(LZ.exam,S.attempts['exam-'+LZ.exam.id]||1):loadStep(true);
  if(a==='cnext'){if(LZ.i+1<LZ.cards.length){LZ.i++;renderLesson();speakCard()}else{LZ.phase='quiz';startQuiz(wordsDrill(LZ.data),{onDone:finishWords})}return}
  if(a==='cprev'){LZ.i--;renderLesson();speakCard();return}
@@ -851,6 +885,8 @@ $('#lesson').addEventListener('click',e=>{
  if(a==='qpick'&&QZ&&!QZ.answered){QZ.picked=+t.dataset.j;return quizAnswer(QZ.picked===QZ.qs[QZ.i].answer)}
  if(a==='qcheck')return checkTyped();
  if(a==='qskip'&&QZ&&!QZ.answered){QZ.typed=($('#qin')||{}).value||'';return quizAnswer(false)}
+ if(a==='qhint'&&QZ&&DQ&&!QZ.answered&&!DQ.hint){DQ.hint=true;DQ.hintIdx=DQ.done;t.disabled=true;$('#qsvg').innerHTML=drawQSVG();return}
+ if(a==='qgive'&&QZ&&!QZ.answered){const q=QZ.qs[QZ.i];q.res='Here’s how it’s written';q.why2={err:DQ?DQ.err:0,hint:DQ?DQ.hint:false,give:true};return quizAnswer(false)}
  if(a==='qnext')return quizNext();
  if(a==='qaudio')return speakAudio(QZ.qs[QZ.i].audio);
  if(a==='lplay')return speak(sceneItems(LZ.data));
