@@ -1164,10 +1164,12 @@ function renderKana(){const body=$('#rbody');if(!body)return;
  if(kmode==='trace'){body.innerHTML=h;return renderTrace()}
  if(!pool().length){body.innerHTML=h+rowsHTML()+'<p class="sub">Pick at least one row.</p>';return}
  if(!quiz)quiz=newQuiz();const q=quiz,st=`<div class="qstat"><span>Streak ${q.streak||0}</span><span>${Math.min(40,S.kanaOK[S.script]||0)}/40 toward the practice step</span></div>`;
- if(kmode==='read')body.innerHTML=h+rowsHTML()+`<div class="card">${st}<div class="big">${q.ch}</div><div class="opts">${q.opts.map(o=>`<button class="op" data-o="${o}" style="text-align:center">${o}</button>`).join('')}</div><div class="fb" id="kfb" style="text-align:center"></div></div>`;
+ if(kmode==='read')body.innerHTML=h+rowsHTML()+`<div class="card">${st}<div class="big">${q.ch}</div><div class="opts" style="grid-template-columns:repeat(${q.opts.length},minmax(0,1fr));gap:6px">${q.opts.map(o=>`<button class="op" data-o="${o}" style="text-align:center">${o}</button>`).join('')}</div><div class="fb" id="kfb" style="text-align:center"></div></div>`;
  else body.innerHTML=h+rowsHTML()+`<div class="card" style="text-align:center">${st}<div class="sub" style="margin:8px 0 0">Type this in ${S.script==='k'?'katakana':'hiragana'}</div><div class="prompt">${esc(q.rom)}</div><div class="sub">${q.en?esc(q.en):'&nbsp;'}</div><input class="ans" id="kans" lang="ja" autocomplete="off" autocapitalize="off" enterkeyhint="done" placeholder="${S.script==='k'?'カタカナ':'ひらがな'}"><div class="fb" id="kfb"></div><div class="tbar"><button class="btn alt" id="kskip">Show me</button><button class="btn" id="kchk">Check</button></div></div>`}
+// answer choices = every kana in the asked letter's chart row, shuffled (わ・を・ん share one group)
+function rowOpts(k){const ids=k.row==='w'||k.row==='nn'?['w','nn']:[k.row];return ids.flatMap(id=>ROWS.find(r=>r.id===id).cells.filter(Boolean).map(c=>c.r))}
 function newQuiz(prev){const streak=prev?prev.streak:0;
- if(kmode==='read'){const k=pickK(),ch=kch(k.h);const others=distract(k.r);return{ch,ans:k.r,opts:shuffle([k.r,...others]),streak}}
+ if(kmode==='read'){const k=pickK(),ch=kch(k.h);return{ch,ans:k.r,opts:shuffle(rowOpts(k)),streak}}
  const set=new Set(pool().map(k=>kch(k.h))),full=new Set(ALLK.map(k=>kch(k.h)));
  const words=(S.script==='k'?WORDS_K:WORDS_H).filter(([w])=>[...w].every(c=>!full.has(c)||set.has(c)));
  if(words.length&&Math.random()<.45){const [w,r,en]=words[Math.floor(Math.random()*words.length)];return{ans:w,rom:r,en,streak}}
